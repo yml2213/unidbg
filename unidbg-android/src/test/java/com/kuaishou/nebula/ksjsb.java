@@ -3,7 +3,11 @@ package com.kuaishou.nebula;
 import com.github.unidbg.AndroidEmulator;
 import com.github.unidbg.Emulator;
 import com.github.unidbg.Module;
+import com.github.unidbg.arm.backend.Backend;
+import com.github.unidbg.arm.backend.CodeHook;
+import com.github.unidbg.arm.backend.UnHook;
 import com.github.unidbg.arm.backend.Unicorn2Factory;
+import com.github.unidbg.arm.context.RegisterContext;
 import com.github.unidbg.file.FileResult;
 import com.github.unidbg.file.IOResolver;
 import com.github.unidbg.linux.android.AndroidEmulatorBuilder;
@@ -15,9 +19,11 @@ import com.github.unidbg.linux.android.dvm.array.ByteArray;
 import com.github.unidbg.linux.android.dvm.wrapper.DvmBoolean;
 import com.github.unidbg.linux.android.dvm.wrapper.DvmInteger;
 import com.github.unidbg.linux.file.ByteArrayFileIO;
+import com.github.unidbg.linux.file.SimpleFileIO;
 import com.github.unidbg.memory.Memory;
 import com.github.unidbg.virtualmodule.android.AndroidModule;
 import com.github.unidbg.virtualmodule.android.JniGraphics;
+import unicorn.Arm64Const;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -78,7 +84,9 @@ public class ksjsb extends AbstractJni implements IOResolver {
         dm.callJNI_OnLoad(emulator);
         System.out.println("[*] kwsgmain JNI_OnLoad调用完成");
 
-
+        // 添加0x9c00内存映射和Hook
+        map0x9c00Memory();
+        System.out.println("[*] 0x9c00内存映射和Hook已设置");
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -460,12 +468,33 @@ public class ksjsb extends AbstractJni implements IOResolver {
      */
     @Override
     public FileResult resolve(Emulator emulator, String pathname, int oflags) {
-        System.out.println("file open requested: " + pathname); // 打印所有被请求打开的文件路径
+        System.out.println("[IOResolver] 请求打开文件: " + pathname);
 
         // 处理空路径或无效路径
         if (pathname == null || pathname.trim().isEmpty()) {
             System.out.println("[*] 拒绝空文件路径访问");
             return null;
+        }
+
+        // 处理 /proc/self/cmdline - 返回进程名称
+        if ("/proc/self/cmdline".equals(pathname)) {
+            return FileResult.success(new ByteArrayFileIO(oflags, pathname,
+                    "com.kuaishou.nebula".getBytes(StandardCharsets.UTF_8)));
+        }
+
+        // 处理 APK 文件访问 - 使用 SimpleFileIO 包装
+        if (pathname != null && pathname.contains("/base.apk")) {
+            File apkFile = new File("unidbg-android/apks/ksjsb/ksjsb_13.8.40.10657.apk");
+            if (apkFile.exists()) {
+                try {
+                    System.out.println("[IOResolver] ✓ 找到APK文件，使用SimpleFileIO包装");
+                    return FileResult.success(new SimpleFileIO(oflags, apkFile, pathname));
+                } catch (Exception e) {
+                    System.out.println("[IOResolver] ✗ 创建 SimpleFileIO 失败: " + e.getMessage());
+                }
+            } else {
+                System.out.println("[IOResolver] ✗ APK文件不存在: " + apkFile.getAbsolutePath());
+            }
         }
 
         switch (pathname) {
@@ -474,7 +503,6 @@ public class ksjsb extends AbstractJni implements IOResolver {
                 // 这是为了避免应用因找不到此文件而崩溃或触发反调试
                 String properties_content = ""; // 你可以根据需要添加一些特定字节
                 System.out.println("[*] Intercepted /dev/__properties__ open. Returning empty content.");
-                // SimpleFileIO(flags, InputStream, path)
                 return FileResult.success(new ByteArrayFileIO(oflags, pathname, properties_content.getBytes(StandardCharsets.UTF_8)));
 
             case "/proc/stat":
@@ -504,11 +532,6 @@ public class ksjsb extends AbstractJni implements IOResolver {
                 String cpuinfo_content = "processor\t: 0\nmodel name\t: ARMv8 Processor rev 0 (v8l)\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32\n";
                 System.out.println("[*] Intercepted /proc/cpuinfo open.");
                 return FileResult.success(new ByteArrayFileIO(oflags, pathname, cpuinfo_content.getBytes(StandardCharsets.UTF_8)));
-
-            // 如果还有其他需要特殊处理的文件，可以在这里添加 case
-            // case "/path/to/another/specific/file":
-            //     // ... return new SimpleFileIO(...)
-            //     break;
 
             default:
                 // 对于其他所有未明确处理的文件，返回 null。
@@ -577,5 +600,132 @@ public class ksjsb extends AbstractJni implements IOResolver {
         return super.callBooleanMethodV(vm, dvmObject, signature, vaList);
     }
 
+    /**
+     * 0x9c00内存映射 - 关键修复
+     * 这个方法创建0x9c00地址的内存映射，解决UC_ERR_FETCH_UNMAPPED错误
+     */
+    private void map0x9c00Memory() {
+        System.out.println("[*] 开始设置0x9c00内存映射...");
+        Backend backend = emulator.getBackend();
+
+        long pageSize = 0x1000;  // 4KB页面
+        long baseAddr = 0x9000;   // 基地址
+        long dataStructAddr = 0x9800;  // 数据结构地址
+
+        // 映射内存页面
+        backend.mem_map(baseAddr, pageSize, unicorn.UnicornConst.UC_PROT_ALL);
+        System.out.println("[*] 已映射内存: 0x" + Long.toHexString(baseAddr) + " - 0x" + Long.toHexString(baseAddr + pageSize));
+
+        // 初始化数据结构
+        byte[] dataStruct = new byte[256];
+        backend.mem_write(dataStructAddr, dataStruct);
+        System.out.println("[*] 已初始化数据结构在: 0x" + Long.toHexString(dataStructAddr));
+
+        // 写入ARM64汇编代码到0x9c00
+        // LDR X0, [PC, #8]  ; 加载0x9800地址到X0
+        // RET               ; 返回
+        // .quad 0x9800      ; 数据：0x9800地址
+        byte[] code = {
+                (byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0x58,  // LDR X0, [PC, #8]
+                (byte) 0xC0, (byte) 0x03, (byte) 0x5F, (byte) 0xD6,  // RET
+                (byte) 0x00, (byte) 0x98, (byte) 0x00, (byte) 0x00,  // .quad 0x9800 (低位)
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00   // .quad 0x9800 (高位)
+        };
+        backend.mem_write(0x9c00, code);
+        System.out.println("[*] 已写入ARM64代码到: 0x9c00");
+
+        // 设置Hook
+        setupHook0x9c00();
+        setupHookFopen();
+    }
+
+    /**
+     * Hook 0x9c00地址的执行
+     */
+    private UnHook hook0x9c00;
+
+    private void setupHook0x9c00() {
+        System.out.println("[*] 设置0x9c00 Hook...");
+        emulator.getBackend().hook_add_new(new CodeHook() {
+            @Override
+            public void onAttach(UnHook unHook) {
+                hook0x9c00 = unHook;
+            }
+
+            @Override
+            public void detach() {
+                // 实现 Detachable 接口要求的方法
+            }
+
+            @Override
+            public void hook(Backend backend, long address, int size, Object user) {
+                System.out.println("[Hook-0x9c00] 执行地址: 0x" + Long.toHexString(address));
+            }
+        }, 0x9c00, 0x9c00, null);
+        System.out.println("[*] 0x9c00 Hook已设置");
+    }
+
+    /**
+     * Hook fopen调用 - 用于调试文件访问
+     */
+    private void setupHookFopen() {
+        System.out.println("[*] 设置fopen Hook...");
+        long fopenAddr = module.base + 0x9c30;
+
+        emulator.getBackend().hook_add_new(new CodeHook() {
+            @Override
+            public void onAttach(UnHook unHook) {
+                // 实现 Detachable 接口要求的方法
+            }
+
+            @Override
+            public void detach() {
+                // 实现 Detachable 接口要求的方法
+            }
+
+            @Override
+            public void hook(Backend backend, long address, int size, Object user) {
+                if (address == fopenAddr) {
+                    System.out.println("[Hook-fopen] 被调用");
+                    RegisterContext ctx = emulator.getContext();
+
+                    long x0 = ctx.getLongArg(0); // filename
+                    long x1 = ctx.getLongArg(1); // mode
+
+                    try {
+                        // 读取文件名 - 手动读取C字符串
+                        byte[] filenameBytes = backend.mem_read(x0, 256);
+                        int nullIndex = 0;
+                        for (int i = 0; i < filenameBytes.length; i++) {
+                            if (filenameBytes[i] == 0) {
+                                nullIndex = i;
+                                break;
+                            }
+                        }
+                        String filename = new String(filenameBytes, 0, nullIndex, StandardCharsets.UTF_8);
+
+                        // 读取模式 - 手动读取C字符串
+                        byte[] modeBytes = backend.mem_read(x1, 16);
+                        nullIndex = 0;
+                        for (int i = 0; i < modeBytes.length; i++) {
+                            if (modeBytes[i] == 0) {
+                                nullIndex = i;
+                                break;
+                            }
+                        }
+                        String mode = new String(modeBytes, 0, nullIndex, StandardCharsets.UTF_8);
+
+                        System.out.println("[Hook-fopen] 文件名: " + filename);
+                        System.out.println("[Hook-fopen] 模式: " + mode);
+
+                    } catch (Exception e) {
+                        System.out.println("[Hook-fopen] 无法读取参数: " + e.getMessage());
+                    }
+                }
+            }
+        }, fopenAddr, fopenAddr + 4, null);
+
+        System.out.println("[*] fopen Hook已设置 @ 0x" + Long.toHexString(fopenAddr));
+    }
 
 }
