@@ -7,6 +7,8 @@ import com.github.unidbg.arm.backend.Unicorn2Factory; // 用于指定使用 Unic
 import com.github.unidbg.file.FileResult;
 import com.github.unidbg.file.IOResolver;
 // import com.github.unidbg.file.linux.LinuxFileSystem; // 如果你直接继承这个了，就不需要
+import com.github.unidbg.file.linux.AndroidFileIO;
+import com.github.unidbg.linux.android.dvm.api.ApplicationInfo;
 import com.github.unidbg.linux.file.ByteArrayFileIO; // 用来1返回内存中的文件内容
 import com.github.unidbg.linux.android.AndroidEmulatorBuilder;
 import com.github.unidbg.linux.android.AndroidResolver;
@@ -16,6 +18,7 @@ import com.github.unidbg.linux.android.dvm.array.ArrayObject;
 import com.github.unidbg.linux.android.dvm.array.ByteArray;
 import com.github.unidbg.linux.android.dvm.wrapper.DvmBoolean;
 import com.github.unidbg.linux.android.dvm.wrapper.DvmInteger;
+import com.github.unidbg.linux.file.SimpleFileIO;
 import com.github.unidbg.memory.Memory;
 import com.github.unidbg.virtualmodule.android.AndroidModule;
 import com.github.unidbg.virtualmodule.android.JniGraphics;
@@ -28,7 +31,7 @@ import java.nio.charset.StandardCharsets; // 用于字符串到字节数组的�
 import java.util.ArrayList;
 import java.util.List;
 
-public class nongyinrongmei extends AbstractJni implements IOResolver {
+public class nongyinrongmei extends AbstractJni implements IOResolver<AndroidFileIO> {
     private static final String SIG_PAYLOAD = "{uid=33127442，uType=2}";
     private final AndroidEmulator emulator;
     private final VM vm;
@@ -268,126 +271,61 @@ public class nongyinrongmei extends AbstractJni implements IOResolver {
     }
 
 
-    /**
-     * 实现 IOResolver 接口，处理文件打开请求
-     * This method is crucial for handling file accesses like /dev/__properties__ and /proc/stat
-     */
     @Override
-    public FileResult resolve(Emulator emulator, String pathname, int oflags) {
-        System.out.println("file open requested: " + pathname); // 打印所有被请求打开的文件路径
-
-        // 处理空路径或无效路径
-        if (pathname == null || pathname.trim().isEmpty()) {
-            System.out.println("[*] 拒绝空文件路径访问");
-            return null;
-        }
-
-        switch (pathname) {
-            case "/dev/__properties__":
-                // 对于 /dev/__properties__，通常返回一个空文件或者非常简单的内容
-                // 这是为了避免应用因找不到此文件而崩溃或触发反调试
-                String properties_content = ""; // 你可以根据需要添加一些特定字节
-                System.out.println("[*] Intercepted /dev/__properties__ open. Returning empty content.");
-                // SimpleFileIO(flags, InputStream, path)
-                return FileResult.success(new ByteArrayFileIO(oflags, pathname, properties_content.getBytes(StandardCharsets.UTF_8)));
-
-            case "/proc/stat":
-                // /proc/stat 提供了系统统计信息，应用程序可能解析它
-                // 提供一个简单的、看起来合理的 CPU 统计数据，格式必须正确
-                String stat_content =
-                        "cpu  200000 0 100000 5000000 0 0 0 0 0 0\n" +
-                                "cpu0 100000 0 50000 2500000 0 0 0 0 0 0\n" +
-                                "cpu1 100000 0 50000 2500000 0 0 0 0 0 0\n" +
-                                "intr 1234567\n" +
-                                "ctxt 8901234\n" +
-                                "btime 1678886400\n" + // boot time in seconds (example)
-                                "processes 12345\n" +
-                                "procs_running 2\n" +
-                                "procs_blocked 0\n" +
-                                "softirq 1234 567 890 123 456 789\n";
-                System.out.println("[*] Intercepted /proc/stat open. Returning dummy content.");
-                return FileResult.success(new ByteArrayFileIO(oflags, pathname, stat_content.getBytes(StandardCharsets.UTF_8)));
-
-            // 处理一些常见的Android系统文件
-            case "/proc/version":
-                String version_content = "Linux version 4.14.186-android (build@hostname) (gcc version 4.9.x) #1 SMP PREEMPT Mon Jan 1 00:00:00 UTC 2024\n";
-                System.out.println("[*] Intercepted /proc/version open.");
-                return FileResult.success(new ByteArrayFileIO(oflags, pathname, version_content.getBytes(StandardCharsets.UTF_8)));
-
-            case "/proc/cpuinfo":
-                String cpuinfo_content = "processor\t: 0\nmodel name\t: ARMv8 Processor rev 0 (v8l)\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32\n";
-                System.out.println("[*] Intercepted /proc/cpuinfo open.");
-                return FileResult.success(new ByteArrayFileIO(oflags, pathname, cpuinfo_content.getBytes(StandardCharsets.UTF_8)));
-
-            // 如果还有其他需要特殊处理的文件，可以在这里添加 case
-            // case "/path/to/another/specific/file":
-            //     // ... return new SimpleFileIO(...)
-            //     break;
-
-            default:
-                // 对于其他所有未明确处理的文件，返回 null。
-                // 这将告诉 Unidbg 的 SyscallHandler 继续尝试后续的 IOResolver，
-                // 如果没有其他 resolver 能处理，会按照默认行为处理（例如，如果文件在 rootfs 中则打开，否则返回 ENOENT）。
-                return null;
-        }
-    }
-
-
-    @Override
-    public DvmObject<?> callObjectMethodV(BaseVM vm, DvmObject<?> dvmObject, String signature, VaList vaList) {
+    public DvmObject<?> callStaticObjectMethodV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
         switch (signature) {
-            case "com/yxcorp/gifshow/App->getPackageName()Ljava/lang/String;": {
-                String packageName = vm.getPackageName();
-                return new StringObject(vm, packageName);
-            }
-            case "com/yxcorp/gifshow/App->getPackageManager()Landroid/content/pm/PackageManager;": {
-//                DvmClass clazz = vm.resolveClass("android/content/pm/PackageManager");
-//                return clazz.newObject(signature);
-                return vm.resolveClass("android/content/pm/PackageManager").newObject(null);
-            }
-            case "com/yxcorp/gifshow/App->getPackageCodePath()Ljava/lang/String;": {
-                return new StringObject(vm, "/data/app/~~tNMZVmV0fBgOq2lCiMwGRA==/com.founder.nongyinrongmei-JZD_aIoXsKoTPab3p20hBw==/base.apk");
-            }
-            case "com/yxcorp/gifshow/App->getAssets()Landroid/content/res/AssetManager;": {
-                return new AssetManager(vm, signature);
-            }
-            case "android/content/SharedPreferences->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;": {
-                // 从 SharedPreferences 读取字符串值
-                String key = vaList.getObjectArg(0).getValue().toString();
-                String defaultValue = vaList.getObjectArg(1).getValue().toString();
-                System.out.println("[*] SharedPreferences.getString called: key=" + key + ", default=" + defaultValue);
-                // 返回默认值或空字符串（因为我们没有实际存储数据）
-                return new StringObject(vm, defaultValue);
-            }
-            case "android/content/Context->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;": {
-                DvmObject<?> dvmObject2 = vm.resolveClass("android/content/SharedPreferences").newObject(null);
-                return dvmObject2;
-            }
-            case "android/content/Context->getFilesDir()Ljava/io/File;": {
-                File file = new File("/unidbg-master_0.97/unidbg-android/src/test/java/com/ibox/files");
-                DvmObject<?> dvmObject1 = vm.resolveClass("java/io/File").newObject(file);
-                return dvmObject1;
-            }
-            case "android/content/SharedPreferences->getAbsolutePath()Ljava/lang/String;": {
-                DvmObject<?> dvmObject2 = vm.resolveClass("android/content/SharedPreferences").newObject(null);
-                return dvmObject2;
-            }
-            case "android/content/pm/PackageManager->getApplicationLabel(Landroid/content/pm/ApplicationInfo;)Ljava/lang/CharSequence;": {
-                StringObject stringObject = new StringObject(vm, "iBox");
+            case "com/aliyun/TigerTally/A->ct()Landroid/content/Context;":
+                DvmObject<?> dvmObject = vm.resolveClass("android/content/Context").newObject(null);
+                return dvmObject;
+            case "com/aliyun/TigerTally/A->pb(Ljava/lang/String;[B)Ljava/lang/String;":
+                StringObject stringObject = new StringObject(vm, "");
                 return stringObject;
-            }
-            case "android/content/Context->getPackageCodePath()Ljava/lang/String;": {
-                return new StringObject(vm, "/data/app/~~tNMZVmV0fBgOq2lCiMwGRA==/com.founder.nongyinrongmei-JZD_aIoXsKoTPab3p20hBw==/base.apk");
-            }
+            case "com/aliyun/TigerTally/A->bt()Landroid/content/Intent;":
+                DvmObject<?> dvmObject1 = vm.resolveClass("android/content/Intent").newObject(null);
+                return dvmObject1;
+
+            case "com/aliyun/TigerTally/s/A->ct()Landroid/content/Context;":
+                DvmObject<?> dvmObject2 = vm.resolveClass("android/content/Context").newObject(null);
+                return dvmObject2;
+
+
         }
-        return super.callObjectMethodV(vm, dvmObject, signature, vaList);
+        return super.callStaticObjectMethodV(vm, dvmClass, signature, vaList);
     }
+
+    @Override
+    public DvmObject<?> newObjectV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
+        switch (signature){
+            case "com/aliyun/TigerTally/s/A$AA-><init>()V":
+                return vm.resolveClass("com/aliyun/TigerTally/s/A$AA").newObject(signature);
+            case "com/aliyun/TigerTally/s/A$BB-><init>()V":
+                return vm.resolveClass("com/aliyun/TigerTally/s/A$BB").newObject(signature);
+
+        }
+        return super.newObjectV(vm,dvmClass,signature,vaList);
+    }
+
     @Override
     public int getStaticIntField(BaseVM vm, DvmClass dvmClass, String signature) {
         if ("android/os/Build$VERSION->SDK_INT:I".equals(signature)) {
             return 30;
         }
         return super.getStaticIntField(vm, dvmClass, signature);
+    }
+
+
+    @Override
+    public int callIntMethodV(BaseVM vm, DvmObject<?> dvmObject, String signature, VaList vaList) {
+        if ("android/content/Intent->getIntExtra(Ljava/lang/String;I)I".equals(signature)) {
+            return 262;
+        }
+        return super.callIntMethodV(vm, dvmObject, signature, vaList);
+    }
+
+    @Override
+    public DvmObject<?> callObjectMethod(BaseVM vm, DvmObject<?> dvmObject, String signature, VarArg varArg) {
+        System.out.println("callObjectMethod");
+        return super.callObjectMethod(vm, dvmObject, signature, varArg);
     }
 
     @Override
@@ -432,42 +370,87 @@ public class nongyinrongmei extends AbstractJni implements IOResolver {
         return super.getStaticObjectField(vm, dvmClass, signature);
     }
 
-
     @Override
-    public DvmObject<?> callStaticObjectMethodV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
+    public DvmObject<?> callObjectMethodV(BaseVM vm, DvmObject<?> dvmObject, String signature, VaList vaList) {
         switch (signature) {
-            case "com/kuaishou/android/security/internal/common/ExceptionProxy->getProcessName(Landroid/content/Context;)Ljava/lang/String;": {
-                return new StringObject(vm, "com.founder.nongyinrongmei");
-            }
-            case "com/aliyun/TigerTally/s/A->ct()Landroid/content/Context;": {
-                // 返回 Context 对象，不是 String
-                return vm.resolveClass("android/content/Context").newObject(null);
-            }
+            case "android/content/pm/PackageManager->getApplicationInfo(Ljava/lang/String;I)Landroid/content/pm/ApplicationInfo;":
+                return new ApplicationInfo(vm);
+            case "android/content/pm/PackageManager->getApplicationLabel(Landroid/content/pm/ApplicationInfo;)Ljava/lang/CharSequence;":
+                StringObject stringObject = new StringObject(vm, "iBox");
+                return stringObject;
+            case "android/content/Context->getFilesDir()Ljava/io/File;":
+                File file = new File("/unidbg-master_0.97/unidbg-android/src/test/java/com/ibox/files");
+                DvmObject<?> dvmObject1 = vm.resolveClass("java/io/File").newObject(file);
+                return dvmObject1;
+            case "android/content/Context->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;":
+                DvmObject<?> dvmObject2 = vm.resolveClass("android/content/SharedPreferences").newObject(null);
+                return dvmObject2;
+//            case "android/content/SharedPreferences->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;":
+//                System.out.println("getString " + vaList.getObjectArg(0).toString());
+//                DvmObject<?> objectArg = vaList.getObjectArg(0);
+//                if (objectArg.getValue().toString().equals("tt_ak")) {
+//                    long currentTimeMillis = System.currentTimeMillis();
+//                    StringObject stringObject1 = new StringObject(vm, "^" + currentTimeMillis+"^86400");
+//                    return stringObject1;
+//                } else if (objectArg.getValue().toString().equals("TT_COOKIEID")) {
+//                    StringObject stringObject1 = new StringObject(vm, "TDluNPJxJtm0/u6f9OKjjGbqudrxW1wN4wftIv5Mu6wKhOsbK3Vu7GcO+fn4SaxwlzfGqH0ZPmf7z0ZGc5by6g==");
+//                    return stringObject1;
+//                }
+//                return super.callObjectMethodV(vm, dvmObject, signature, vaList);
+            case "android/content/SharedPreferences->edit()Landroid/content/SharedPreferences$Editor;":
+                DvmObject<?> dvmObject3 = vm.resolveClass("android/content/SharedPreferences$Editor").newObject(null);
+                return dvmObject3;
+            case "android/content/SharedPreferences$Editor->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;":
+                Object value = dvmObject.getValue();
+                DvmObject<?> dvmObject4 = vm.resolveClass("android/content/SharedPreferences$Editor").newObject(value);
+                return dvmObject4;
+            case "com/aliyun/TigerTally/s/A$AA->en(Ljava/lang/String;)Ljava/lang/String;":
+                return new StringObject(vm,"eb32139f977b4e12abca93113c3d8486557dfeb");
+            case "com/aliyun/TigerTally/s/A$BB->en(Ljava/lang/String;)Ljava/lang/String;":
+                return new StringObject(vm,"eb32139f977b4e12abca93113c3d8486557dfeb");
+            case "android/content/Context->getPackageCodePath()Ljava/lang/String;":
+                return new StringObject(vm, "/data/app/~~tNMZVmV0fBgOq2lCiMwGRA==/com.kuaishou.nebula-JZD_aIoXsKoTPab3p20hBw==/base.apk");
+
+            case "android/content/SharedPreferences->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;":
+                return vm.resolveClass("Landroid/content/SharedPreferences;");
         }
-        return super.callStaticObjectMethodV(vm, dvmClass, signature, vaList);
+        return super.callObjectMethodV(vm, dvmObject, signature, vaList);
     }
 
-    @Override
-    public void callStaticVoidMethodV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
-        switch (signature) {
-            case "com/kuaishou/android/security/internal/common/ExceptionProxy->nativeReport(ILjava/lang/String;)V": {
-                System.out.println("触发了---1:  com/kuaishou/android/security/internal/common/ExceptionProxy->nativeReport(ILjava/lang/String;)V");
-                return;
-            }
-        }
-        super.callStaticVoidMethodV(vm, dvmClass, signature, vaList);
-    }
 
     @Override
     public boolean callBooleanMethodV(BaseVM vm, DvmObject<?> dvmObject, String signature, VaList vaList) {
-        System.out.println("callBooleanMethodV: " + signature);
-        switch (signature) {
-            case "java/lang/Boolean->booleanValue()Z":
-                DvmBoolean dvmBoolean = (DvmBoolean) dvmObject;
-                return dvmBoolean.getValue();
+        if ("android/content/SharedPreferences$Editor->commit()Z".equals(signature)) {
+            return true;
         }
         return super.callBooleanMethodV(vm, dvmObject, signature, vaList);
     }
 
+    @Override
+    public long getLongField(BaseVM vm, DvmObject<?> dvmObject, String signature) {
+        if ("android/content/pm/PackageInfo->firstInstallTime:J".equals(signature)) {
+            return 1653742840932L;
+        } else if ("android/content/pm/PackageInfo->lastUpdateTime:J".equals(signature)) {
+            long currentTimeMillis = System.currentTimeMillis();
+            return currentTimeMillis;
+        }
+        return super.getLongField(vm, dvmObject, signature);
+    }
+
+//    public static void main(String[] args) {
+//        IboxTest iboxTest = new IboxTest();
+//        iboxTest.init();
+//        iboxTest.getWtoken("{\"albumId\":100513930}");
+//    }
+    @Override
+    public FileResult<AndroidFileIO> resolve(Emulator<AndroidFileIO> emulator, String pathname, int oflags) {
+        System.out.println(pathname);
+        if ("/proc/self/maps".equals(pathname)) {
+            return FileResult.success(new SimpleFileIO(oflags, new File("/Users/maps"), pathname));
+        } else if ("/proc/stat".equals(pathname)) {
+            return FileResult.success(new SimpleFileIO(oflags, new File("/Users/yml/IdeaProjects/unidbg_1/unidbg-android/src/test/java/com/rootfs/stat"), pathname));
+        }
+        return null;
+    }
 
 }
