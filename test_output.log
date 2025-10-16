@@ -1,0 +1,63 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] unidbg                                                             [pom]
+[INFO] unidbg-api                                                         [jar]
+[INFO] unidbg-dynarmic                                                    [jar]
+[INFO] unidbg-hypervisor                                                  [jar]
+[INFO] unidbg-kvm                                                         [jar]
+[INFO] unidbg-unicorn2                                                    [jar]
+[INFO] unidbg-android                                                     [jar]
+[INFO] unidbg-ios                                                         [jar]
+[INFO] 
+[INFO] ---------------------< com.github.zhkl0228:unidbg >---------------------
+[INFO] Building unidbg 0.9.9-SNAPSHOT                                     [1/8]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] -------------------< com.github.zhkl0228:unidbg-api >-------------------
+[INFO] Building unidbg-api 0.9.9-SNAPSHOT                                 [2/8]
+[INFO]   from unidbg-api/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ unidbg-api ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.3:compile (default-compile) @ unidbg-api ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ unidbg-api ---
+[INFO] Copying 2 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.3:testCompile (default-testCompile) @ unidbg-api ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- surefire:2.12.4:test (default-test) @ unidbg-api ---
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for unidbg 0.9.9-SNAPSHOT:
+[INFO] 
+[INFO] unidbg ............................................. SUCCESS [  0.046 s]
+[INFO] unidbg-api ......................................... FAILURE [  0.428 s]
+[INFO] unidbg-dynarmic .................................... SKIPPED
+[INFO] unidbg-hypervisor .................................. SKIPPED
+[INFO] unidbg-kvm ......................................... SKIPPED
+[INFO] unidbg-unicorn2 .................................... SKIPPED
+[INFO] unidbg-android ..................................... SKIPPED
+[INFO] unidbg-ios ......................................... SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.519 s
+[INFO] Finished at: 2025-10-16T12:15:27+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test (default-test) on project unidbg-api: No tests were executed!  (Set -DfailIfNoTests=false to ignore this error.) -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :unidbg-api
