@@ -65,8 +65,8 @@ public class KSEmulatorTrace extends AbstractJni implements IOResolver {
         System.out.println("SO大小: 0x" + Long.toHexString(module.size));
         dm.callJNI_OnLoad(emulator);
         
-        // 映射0x9c00区域
-        initializeMemoryMapping();
+        // 修复GOT表 - 关键修复！
+        fixGotTable();
         
         // 设置追踪Hook
         setupTraceHook();
@@ -199,15 +199,58 @@ public class KSEmulatorTrace extends AbstractJni implements IOResolver {
         System.out.println("[追踪] ✓ 初始化成功，结果: " + result);
     }
 
-    private void initializeMemoryMapping() {
+    /**
+     * 修复GOT表 - 解决所有AssetManager相关函数的GOT重定位问题
+     *
+     * 问题分析：
+     * - 多个AssetManager GOT表项未被正确重定位
+     * - 当PLT代码从这些GOT表项加载地址时，会跳转到无效地址
+     *
+     * 解决方案：
+     * - 创建一个返回NULL的stub函数
+     * - 将所有AssetManager相关的GOT表项都指向stub函数
+     */
+    private void fixGotTable() {
         Backend backend = emulator.getBackend();
-        backend.mem_map(0x9000, 0x1000, UnicornConst.UC_PROT_ALL);
+        Memory memory = emulator.getMemory();
+        
+        // 使用malloc分配stub内存（避免地址冲突）
+        long stubAddr = memory.malloc(0x100, true).getPointer().peer;
+        System.out.println("[GOT修复] 分配stub函数地址: 0x" + Long.toHexString(stubAddr));
+        
+        // ARM64代码：MOV X0, #0; RET（返回NULL）
         byte[] stubCode = {
                 (byte) 0x00, (byte) 0x00, (byte) 0x80, (byte) 0xD2,  // MOV X0, #0
                 (byte) 0xC0, (byte) 0x03, (byte) 0x5F, (byte) 0xD6   // RET
         };
-        backend.mem_write(0x9c00, stubCode);
-        System.out.println("[初始化] 0x9c00 stub已创建\n");
+        backend.mem_write(stubAddr, stubCode);
+        
+        // 准备stub地址的字节数组
+        byte[] addrBytes = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            addrBytes[i] = (byte) ((stubAddr >> (i * 8)) & 0xFF);
+        }
+        
+        // 修复所有AssetManager相关的GOT表项
+        long[] assetGotOffsets = {
+            0x6eaf8,  // AAssetManager_open_ptr
+            0x6eb50,  // AAssetManager_fromJava_ptr
+            0x6eb80,  // AAsset_close_ptr
+            0x6ebe8,  // AAssetDir_getNextFileName_ptr
+            0x6ec40,  // AAsset_read_ptr
+            0x6ecf0,  // AAssetManager_openDir_ptr
+            0x6ee28,  // AAsset_getLength_ptr
+            0x6ee48   // AAssetDir_close_ptr
+        };
+        
+        System.out.println("[GOT修复] 开始修复 " + assetGotOffsets.length + " 个AssetManager GOT表项...");
+        for (long offset : assetGotOffsets) {
+            long gotAddr = module.base + offset;
+            backend.mem_write(gotAddr, addrBytes);
+            System.out.println("[GOT修复]   ✓ GOT[0x" + Long.toHexString(offset) + "] -> 0x" + Long.toHexString(stubAddr));
+        }
+        
+        System.out.println("[GOT修复] ✓ 所有AssetManager函数将返回NULL\n");
     }
 
     /**

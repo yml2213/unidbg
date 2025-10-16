@@ -60,9 +60,8 @@ public class KSEmulator extends AbstractJni implements IOResolver {
         System.out.print("size :" + module.size + "\n");
         dm.callJNI_OnLoad(emulator);
         
-        // 初始化0x9c00内存映射 - 解决绝对地址0x9c00访问错误
-        // 注意：这是workaround，因为某些代码错误地使用绝对地址而非module.base+0x9c00
-//        initializeMemoryMapping();
+        // 修复GOT表 - 解决AssetManager函数的GOT重定位问题
+        fixGotTable();
     }
 
     private void call_doCommandNative_sig3(String text) {
@@ -95,7 +94,7 @@ public class KSEmulator extends AbstractJni implements IOResolver {
         KSEmulator emulator = new KSEmulator();
         emulator.call_doCommandNative_init();
 //        emulator.call_doCommandNative_sig3("HandsomeBro");
-//        emulator.encryptEncData();
+        emulator.encryptEncData();
 //
     }
     public String encryptEncData() {
@@ -323,48 +322,106 @@ public class KSEmulator extends AbstractJni implements IOResolver {
 
 
     /**
-     * 0x9c00内存映射 - Workaround修复
+     * 修复GOT表 - 解决所有AssetManager相关函数的GOT重定位问题
      *
      * 问题分析：
-     * 1. IDA显示0x9c00是libkwsgmain.so内的PLT函数（module.base+0x9c00）
-     * 2. SO加载器已经映射了该地址，但错误显示访问的是绝对地址0x9c00
-     * 3. 这说明某些代码错误地使用了硬编码的绝对地址0x9c00
+     * - libkwsgmain.so 中有多个 AssetManager 函数的 GOT 表项未被正确重定位
+     * - 当 PLT 代码从这些 GOT 表项加载地址时，会跳转到无效地址（如 0x9c00）
+     * - 这些符号在模块中被标记为 "missing before init"
      *
-     * 解决方案：
-     * 在绝对地址0x9c00创建一个stub函数，返回0（成功）
-     * 参考ksjsb.java的成功实现
+     * 解决方案（两种stub函数）：
+     * 1. AAssetManager_fromJava - 返回假的AAssetManager指针（非NULL）
+     * 2. 其他AssetManager函数 - 返回NULL表示功能不可用
      */
-    private void initializeMemoryMapping() {
-        System.out.println("[*] 开始设置绝对地址0x9c00的stub映射...");
-        System.out.println("[*] 注意：0x9c00是PLT函数，正常应该使用module.base+0x9c00");
-        System.out.println("[*] 但代码中存在硬编码的绝对地址0x9c00访问");
-        
+    private void fixGotTable() {
         Backend backend = emulator.getBackend();
-
-        long pageSize = 0x1000;  // 4KB页面
-        long baseAddr = 0x9000;   // 绝对地址0x9000
-        long dataStructAddr = 0x9800;  // 绝对地址0x9800
-
-        // 映射绝对地址内存页面
-        backend.mem_map(baseAddr, pageSize, UnicornConst.UC_PROT_ALL);
-        System.out.println("[*] 已映射绝对地址: 0x" + Long.toHexString(baseAddr) + " - 0x" + Long.toHexString(baseAddr + pageSize));
-
-        // 初始化数据结构
-        byte[] dataStruct = new byte[256];
-        backend.mem_write(dataStructAddr, dataStruct);
-        System.out.println("[*] 已初始化数据结构在绝对地址: 0x" + Long.toHexString(dataStructAddr));
-
-        // 写入stub代码到绝对地址0x9c00
-        // 简单返回0（成功）
-        // MOV X0, #0
+        Memory memory = emulator.getMemory();
+        
+        // 1. 分配假的AssetManager结构体
+        long fakeAssetManager = memory.malloc(0x100, false).getPointer().peer;
+        System.out.println("[GOT修复] 分配假AssetManager: 0x" + Long.toHexString(fakeAssetManager));
+        
+        // 2. 创建并分配可执行内存用于stub函数
+        // 注意：使用 mmap 分配可执行内存
+        long stubFromJava = memory.mmap(0x1000, UnicornConst.UC_PROT_READ | UnicornConst.UC_PROT_EXEC).peer;
+        long stubNull = stubFromJava + 0x100;
+        System.out.println("[GOT修复] 分配fromJava stub: 0x" + Long.toHexString(stubFromJava));
+        System.out.println("[GOT修复] 分配NULL stub: 0x" + Long.toHexString(stubNull));
+        
+        // 3. 写入 AAssetManager_fromJava stub代码（返回假指针）
+        // ARM64代码：使用 MOVZ/MOVK 指令序列加载64位地址，然后RET
+        byte[] fromJavaCode = new byte[20];
+        // MOVZ X0, #(fakeAssetManager & 0xFFFF), LSL #0
+        fromJavaCode[0] = (byte) ((fakeAssetManager >> 0) & 0xFF);
+        fromJavaCode[1] = (byte) ((fakeAssetManager >> 8) & 0xFF);
+        fromJavaCode[2] = (byte) 0x80;
+        fromJavaCode[3] = (byte) 0xD2;
+        // MOVK X0, #((fakeAssetManager >> 16) & 0xFFFF), LSL #16
+        fromJavaCode[4] = (byte) ((fakeAssetManager >> 16) & 0xFF);
+        fromJavaCode[5] = (byte) ((fakeAssetManager >> 24) & 0xFF);
+        fromJavaCode[6] = (byte) 0xA0;
+        fromJavaCode[7] = (byte) 0xF2;
+        // MOVK X0, #((fakeAssetManager >> 32) & 0xFFFF), LSL #32
+        fromJavaCode[8] = (byte) ((fakeAssetManager >> 32) & 0xFF);
+        fromJavaCode[9] = (byte) ((fakeAssetManager >> 40) & 0xFF);
+        fromJavaCode[10] = (byte) 0xC0;
+        fromJavaCode[11] = (byte) 0xF2;
+        // MOVK X0, #((fakeAssetManager >> 48) & 0xFFFF), LSL #48
+        fromJavaCode[12] = (byte) ((fakeAssetManager >> 48) & 0xFF);
+        fromJavaCode[13] = (byte) ((fakeAssetManager >> 56) & 0xFF);
+        fromJavaCode[14] = (byte) 0xE0;
+        fromJavaCode[15] = (byte) 0xF2;
         // RET
-        byte[] stubCode = {
+        fromJavaCode[16] = (byte) 0xC0;
+        fromJavaCode[17] = (byte) 0x03;
+        fromJavaCode[18] = (byte) 0x5F;
+        fromJavaCode[19] = (byte) 0xD6;
+        backend.mem_write(stubFromJava, fromJavaCode);
+        
+        // 4. 写入返回NULL的stub代码（用于其他AssetManager函数）
+        byte[] nullStubCode = {
                 (byte) 0x00, (byte) 0x00, (byte) 0x80, (byte) 0xD2,  // MOV X0, #0
                 (byte) 0xC0, (byte) 0x03, (byte) 0x5F, (byte) 0xD6   // RET
         };
-        backend.mem_write(0x9c00, stubCode);
-        System.out.println("[*] 已在绝对地址0x9c00写入stub代码 (MOV X0,#0; RET)");
-        System.out.println("[✓] 绝对地址0x9c00的stub映射完成");
+        backend.mem_write(stubNull, nullStubCode);
+        
+        // 5. 修复所有AssetManager相关的GOT表项
+        System.out.println("[GOT修复] 开始修复AssetManager GOT表项...\n");
+        
+        // 将stubFromJava地址写入 AAssetManager_fromJava 的GOT表项
+        byte[] fromJavaAddr = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            fromJavaAddr[i] = (byte) ((stubFromJava >> (i * 8)) & 0xFF);
+        }
+        long gotFromJava = module.base + 0x6eb50;
+        backend.mem_write(gotFromJava, fromJavaAddr);
+        System.out.println("[GOT修复] ✓ AAssetManager_fromJava[0x6eb50] -> 0x" + Long.toHexString(stubFromJava) + " (返回假指针)");
+        
+        // 将stubNull地址写入其他AssetManager函数的GOT表项
+        byte[] nullAddr = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            nullAddr[i] = (byte) ((stubNull >> (i * 8)) & 0xFF);
+        }
+        
+        long[] otherGotOffsets = {
+            0x6eaf8,  // AAssetManager_open
+            0x6eb80,  // AAsset_close
+            0x6ebe8,  // AAssetDir_getNextFileName
+            0x6ec40,  // AAsset_read
+            0x6ecf0,  // AAssetManager_openDir (原来的0x9c00问题)
+            0x6ee28,  // AAsset_getLength
+            0x6ee48   // AAssetDir_close
+        };
+        
+        for (long offset : otherGotOffsets) {
+            long gotAddr = module.base + offset;
+            backend.mem_write(gotAddr, nullAddr);
+            System.out.println("[GOT修复] ✓ GOT[0x" + Long.toHexString(offset) + "] -> 0x" + Long.toHexString(stubNull) + " (返回NULL)");
+        }
+        
+        System.out.println("\n[GOT修复] ✓ 完成修复！");
+        System.out.println("[GOT修复]   - AAssetManager_fromJava 将返回假指针 0x" + Long.toHexString(fakeAssetManager));
+        System.out.println("[GOT修复]   - 其他7个AssetManager函数将返回NULL\n");
     }
 
 }
