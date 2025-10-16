@@ -31,6 +31,7 @@ public class KSEmulator extends AbstractJni implements IOResolver {
     private final AndroidEmulator emulator;
     private final Module module;
     private final VM vm;
+    private final DvmObject<?> context;  // 共享的Context对象
     private static final String ENC_DATA_REQUEST_HEX;
     private static final String ENC_DATA_EXPECTED_HEX;
 
@@ -46,22 +47,35 @@ public class KSEmulator extends AbstractJni implements IOResolver {
                 .build();
         Memory memory = emulator.getMemory();
         memory.setLibraryResolver(new AndroidResolver(23));
+        
         vm = emulator.createDalvikVM(new File("unidbg-android/apks/ksjsb/ksjsb_13.8.40.10657.apk"));
         vm.setJni(this);
-        vm.setVerbose(true);
-        new AndroidModule(emulator, vm).register(memory);
+        vm.setVerbose(false);  // 先关闭verbose，减少干扰
         
-        // 添加IOResolver - 这是关键缺失!
+        // 添加IOResolver - 必须在加载库之前
         emulator.getSyscallHandler().addIOResolver(this);
         
+        // 注册AndroidModule - 必须在加载库之前
+        new AndroidModule(emulator, vm).register(memory);
+        
+        // 创建共享的Context对象
+        context = vm.resolveClass("com/yxcorp/gifshow/App").newObject(null);
+        vm.addGlobalObject(context);  // 添加为全局对象，防止被回收
+        
+        System.out.println("[初始化] 开始加载 SO 库...");
         DalvikModule dm = vm.loadLibrary("kwsgmain", true);
         module = dm.getModule();
-        System.out.print("base :" + module.base + "\n");
-        System.out.print("size :" + module.size + "\n");
+        System.out.println("[初始化] SO base: 0x" + Long.toHexString(module.base));
+        System.out.println("[初始化] SO size: 0x" + Long.toHexString(module.size));
+        
+        System.out.println("[初始化] 调用 JNI_OnLoad...");
         dm.callJNI_OnLoad(emulator);
         
         // 修复GOT表 - 解决AssetManager函数的GOT重定位问题
+        System.out.println("[初始化] 修复 GOT 表...");
         fixGotTable();
+        
+        System.out.println("[初始化] ✓ 初始化完成\n");
     }
 
     private void call_doCommandNative_sig3(String text) {
@@ -92,20 +106,25 @@ public class KSEmulator extends AbstractJni implements IOResolver {
 
     public static void main(String[] args) {
         KSEmulator emulator = new KSEmulator();
+        System.out.println("\n========== 第1步：初始化环境 ==========");
         emulator.call_doCommandNative_init();
-//        emulator.call_doCommandNative_sig3("HandsomeBro");
+        System.out.println("\n========== 第2步：加密数据 ==========");
         emulator.encryptEncData();
-//
+        System.out.println("\n========== 执行完成 ==========\n");
     }
     public String encryptEncData() {
-        System.out.println("[encryptEncData] 开始执行 encData 调用...");
+        System.out.println("\n[encryptEncData] 开始执行 encData 调用...");
+        System.out.println("[encryptEncData] opcode: 10400");
+        System.out.println("[encryptEncData] 使用共享Context: " + context);
+        
+        // 启用详细日志
+        vm.setVerbose(true);
+        
         List<Object> list = new ArrayList<>(4);
         list.add(vm.getJNIEnv());
         DvmObject<?> thiz = vm.resolveClass("com/kuaishou/android/security/internal/dispatch/JNICLibrary").newObject(null);
         list.add(vm.addLocalObject(thiz));
-        DvmObject<?> context = vm.resolveClass("com/yxcorp/gifshow/App").newObject(null);
-        vm.addLocalObject(context);
-        list.add(10400);
+        list.add(10400);  // opcode参数
 
         System.out.println("[encryptEncData] 请求Hex长度: " + ENC_DATA_REQUEST_HEX.length());
         byte[] requestBytes = hexToBytes(ENC_DATA_REQUEST_HEX);
@@ -115,31 +134,44 @@ public class KSEmulator extends AbstractJni implements IOResolver {
 
         StringObject appKey = new StringObject(vm, "d7b7d042-d4f2-4012-be60-d97ff2429c17");
         vm.addLocalObject(appKey);
+        
         DvmInteger zero = DvmInteger.valueOf(vm, 0);
         vm.addLocalObject(zero);
+        
+        // 使用共享的Context对象，而不是创建新的
+        vm.addLocalObject(context);
+        
         DvmBoolean boolTrueFirst = DvmBoolean.valueOf(vm, true);
         vm.addLocalObject(boolTrueFirst);
+        
         DvmBoolean boolTrueSecond = DvmBoolean.valueOf(vm, true);
         vm.addLocalObject(boolTrueSecond);
+        
         StringObject deviceKey = new StringObject(vm, "95147564-9763-4413-a937-6f0e3c12caf1");
         vm.addLocalObject(deviceKey);
 
+        // 参数数组：[ByteArray, String, Integer, null, Context, Boolean, Boolean, String]
         ArrayObject paramsArray = new ArrayObject(
-                requestArray,
-                appKey,
-                zero,
-                null,
-                context,
-                boolTrueFirst,
-                boolTrueSecond,
-                deviceKey
+                requestArray,   // [0] 请求数据
+                appKey,         // [1] app key
+                zero,           // [2] Integer 0
+                null,           // [3] null
+                context,        // [4] Context
+                boolTrueFirst,  // [5] Boolean true
+                boolTrueSecond, // [6] Boolean true
+                deviceKey       // [7] device key
         );
-        System.out.println("[encryptEncData] 参数数组: " + paramsArray);
+        System.out.println("[encryptEncData] 参数数组长度: " + 8);
         list.add(vm.addLocalObject(paramsArray));
 
+        System.out.println("[encryptEncData] 即将调用 doCommandNative (0x40cd4)...");
         Number result = module.callFunction(emulator, 0x40cd4, list.toArray());
+        
+        // 关闭详细日志
+        vm.setVerbose(false);
+        
         String resultInfo = result == null ? "null" : result + " (0x" + Long.toHexString(result.longValue()) + ")";
-        System.out.println("[encryptEncData] JNI 原始返回: " + resultInfo);
+        System.out.println("\n[encryptEncData] JNI 原始返回: " + resultInfo);
         if (result == null || result.intValue() == -1) {
             System.out.println("[encryptEncData] 调用失败，返回值: " + result);
             return null;
@@ -201,11 +233,12 @@ public class KSEmulator extends AbstractJni implements IOResolver {
 
 
     private void call_doCommandNative_init() {
+        System.out.println("[initializeEnvironment] 使用共享Context: " + context);
         List<Object> list = new ArrayList<>(4);
         list.add(vm.getJNIEnv()); // 第⼀个参数是env
         DvmObject<?> thiz = vm.resolveClass("com/kuaishou/android/security/internal/dispatch/JNICLibrary").newObject(null);
         list.add(vm.addLocalObject(thiz)); // 第⼆个参数，实例⽅法是jobject，静态⽅法是jclass，直接填0，⼀般⽤不到。
-        DvmObject<?> context = vm.resolveClass("com/yxcorp/gifshow/App").newObject(null); // context
+        // 使用共享的Context对象
         vm.addLocalObject(context);
         list.add(10412); // opcode参数
         StringObject appkey = new StringObject(vm, "d7b7d042-d4f2-4012-be60-d97ff2429c17");
@@ -231,6 +264,15 @@ public class KSEmulator extends AbstractJni implements IOResolver {
         System.out.println("[initializeEnvironment] 结果: " + result);
     }
 
+    @Override
+    public int callIntMethodV(BaseVM vm, DvmObject<?> dvmObject, String signature, VaList vaList) {
+        switch (signature) {
+            case "java/lang/Integer->intValue()I":
+                return ((DvmInteger)dvmObject).getValue();
+        }
+        return super.callIntMethodV(vm, dvmObject, signature, vaList);
+    }
+
     public boolean callBooleanMethodV(BaseVM vm, DvmObject<?> dvmObject, String signature, VaList vaList) {
         switch (signature) {
             case "java/lang/Boolean->booleanValue()Z":
@@ -243,7 +285,9 @@ public class KSEmulator extends AbstractJni implements IOResolver {
     public void callStaticVoidMethodV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
         switch (signature) {
             case "com/kuaishou/android/security/internal/common/ExceptionProxy->nativeReport(ILjava/lang/String;)V": {
-                System.out.println("触发了---1:  com/kuaishou/android/security/internal/common/ExceptionProxy->nativeReport(ILjava/lang/String;)V");
+                int code = vaList.getIntArg(0);
+                String message = vaList.getObjectArg(1).getValue().toString();
+                System.out.println("[nativeReport] 错误码: 0x" + Integer.toHexString(code) + " (" + code + "), 消息: " + message);
                 return;
             }
         }
@@ -256,6 +300,13 @@ public class KSEmulator extends AbstractJni implements IOResolver {
         switch (signature) {
             case "com/kuaishou/android/security/internal/common/ExceptionProxy->getProcessName(Landroid/content/Context;)Ljava/lang/String;":
                 return new StringObject(vm, "com.kuaishou.nebula");
+            case "java/lang/System->getProperty(Ljava/lang/String;)Ljava/lang/String;": {
+                StringObject keyObj = vaList.getObjectArg(0);
+                String key = keyObj.getValue();
+                String value = System.getProperty(key);
+                System.out.println("[System.getProperty] key: " + key + " => " + value);
+                return value != null ? new StringObject(vm, value) : null;
+            }
         }
         return super.callStaticObjectMethodV(vm, dvmClass, signature, vaList);
     }
@@ -277,7 +328,13 @@ public class KSEmulator extends AbstractJni implements IOResolver {
                 return new AssetManager(vm, signature);
             }
             case "com/yxcorp/gifshow/App->getPackageManager()Landroid/content/pm/PackageManager;": {
-                return vm.resolveClass("android.content.pm.PackageManager").newObject(null);
+                return vm.resolveClass("android/content/pm/PackageManager").newObject(signature);
+            }
+            case "android/content/pm/PackageManager->getPackageInfo(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;": {
+                String packageName = (String) vaList.getObjectArg(0).getValue();
+                int flags = vaList.getIntArg(1);
+                System.out.println("[PackageManager] getPackageInfo(" + packageName + ", " + flags + ")");
+                return new PackageInfo(vm, packageName, 138401);
             }
 
             case "android/content/Context->getPackageCodePath()Ljava/lang/String;": {
@@ -296,10 +353,22 @@ public class KSEmulator extends AbstractJni implements IOResolver {
      */
     @Override
     public FileResult resolve(Emulator emulator, String pathname, int oflags) {
+        if (pathname == null) {
+            System.out.println("[IOResolver] pathname is NULL");
+            return null;
+        }
+        
+        // 检测并忽略无效路径（内存地址被误当作字符串）
+        if (pathname.length() < 10 && pathname.contains("\ufffd")) {
+            // \ufffd 是 Unicode 替换字符，表示无效的字节序列
+            System.out.println("[IOResolver] 忽略无效路径（内存地址）: " + pathname);
+            return null;
+        }
+        
         System.out.println("[IOResolver] 请求打开文件: " + pathname);
         
         // 处理APK路径
-        if (pathname != null && pathname.contains("/base.apk")) {
+        if (pathname.contains("/base.apk")) {
             File apkFile = new File("unidbg-android/apks/ksjsb/ksjsb_13.8.40.10657.apk");
             if (apkFile.exists()) {
                 System.out.println("[IOResolver] ✓ 返回APK文件");
@@ -342,86 +411,68 @@ public class KSEmulator extends AbstractJni implements IOResolver {
         System.out.println("[GOT修复] 分配假AssetManager: 0x" + Long.toHexString(fakeAssetManager));
         
         // 2. 创建并分配可执行内存用于stub函数
-        // 注意：使用 mmap 分配可执行内存
         long stubFromJava = memory.mmap(0x1000, UnicornConst.UC_PROT_READ | UnicornConst.UC_PROT_EXEC).peer;
         long stubNull = stubFromJava + 0x100;
         System.out.println("[GOT修复] 分配fromJava stub: 0x" + Long.toHexString(stubFromJava));
         System.out.println("[GOT修复] 分配NULL stub: 0x" + Long.toHexString(stubNull));
         
         // 3. 写入 AAssetManager_fromJava stub代码（返回假指针）
-        // ARM64代码：使用 MOVZ/MOVK 指令序列加载64位地址，然后RET
         byte[] fromJavaCode = new byte[20];
-        // MOVZ X0, #(fakeAssetManager & 0xFFFF), LSL #0
         fromJavaCode[0] = (byte) ((fakeAssetManager >> 0) & 0xFF);
         fromJavaCode[1] = (byte) ((fakeAssetManager >> 8) & 0xFF);
         fromJavaCode[2] = (byte) 0x80;
         fromJavaCode[3] = (byte) 0xD2;
-        // MOVK X0, #((fakeAssetManager >> 16) & 0xFFFF), LSL #16
         fromJavaCode[4] = (byte) ((fakeAssetManager >> 16) & 0xFF);
         fromJavaCode[5] = (byte) ((fakeAssetManager >> 24) & 0xFF);
         fromJavaCode[6] = (byte) 0xA0;
         fromJavaCode[7] = (byte) 0xF2;
-        // MOVK X0, #((fakeAssetManager >> 32) & 0xFFFF), LSL #32
         fromJavaCode[8] = (byte) ((fakeAssetManager >> 32) & 0xFF);
         fromJavaCode[9] = (byte) ((fakeAssetManager >> 40) & 0xFF);
         fromJavaCode[10] = (byte) 0xC0;
         fromJavaCode[11] = (byte) 0xF2;
-        // MOVK X0, #((fakeAssetManager >> 48) & 0xFFFF), LSL #48
         fromJavaCode[12] = (byte) ((fakeAssetManager >> 48) & 0xFF);
         fromJavaCode[13] = (byte) ((fakeAssetManager >> 56) & 0xFF);
         fromJavaCode[14] = (byte) 0xE0;
         fromJavaCode[15] = (byte) 0xF2;
-        // RET
         fromJavaCode[16] = (byte) 0xC0;
         fromJavaCode[17] = (byte) 0x03;
         fromJavaCode[18] = (byte) 0x5F;
         fromJavaCode[19] = (byte) 0xD6;
         backend.mem_write(stubFromJava, fromJavaCode);
         
-        // 4. 写入返回NULL的stub代码（用于其他AssetManager函数）
+        // 4. 写入返回NULL的stub代码
         byte[] nullStubCode = {
-                (byte) 0x00, (byte) 0x00, (byte) 0x80, (byte) 0xD2,  // MOV X0, #0
-                (byte) 0xC0, (byte) 0x03, (byte) 0x5F, (byte) 0xD6   // RET
+                (byte) 0x00, (byte) 0x00, (byte) 0x80, (byte) 0xD2,
+                (byte) 0xC0, (byte) 0x03, (byte) 0x5F, (byte) 0xD6
         };
         backend.mem_write(stubNull, nullStubCode);
         
         // 5. 修复所有AssetManager相关的GOT表项
         System.out.println("[GOT修复] 开始修复AssetManager GOT表项...\n");
         
-        // 将stubFromJava地址写入 AAssetManager_fromJava 的GOT表项
         byte[] fromJavaAddr = new byte[8];
         for (int i = 0; i < 8; i++) {
             fromJavaAddr[i] = (byte) ((stubFromJava >> (i * 8)) & 0xFF);
         }
         long gotFromJava = module.base + 0x6eb50;
         backend.mem_write(gotFromJava, fromJavaAddr);
-        System.out.println("[GOT修复] ✓ AAssetManager_fromJava[0x6eb50] -> 0x" + Long.toHexString(stubFromJava) + " (返回假指针)");
+        System.out.println("[GOT修复] ✓ AAssetManager_fromJava[0x6eb50] -> 0x" + Long.toHexString(stubFromJava));
         
-        // 将stubNull地址写入其他AssetManager函数的GOT表项
         byte[] nullAddr = new byte[8];
         for (int i = 0; i < 8; i++) {
             nullAddr[i] = (byte) ((stubNull >> (i * 8)) & 0xFF);
         }
         
         long[] otherGotOffsets = {
-            0x6eaf8,  // AAssetManager_open
-            0x6eb80,  // AAsset_close
-            0x6ebe8,  // AAssetDir_getNextFileName
-            0x6ec40,  // AAsset_read
-            0x6ecf0,  // AAssetManager_openDir (原来的0x9c00问题)
-            0x6ee28,  // AAsset_getLength
-            0x6ee48   // AAssetDir_close
+            0x6eaf8, 0x6eb80, 0x6ebe8, 0x6ec40, 0x6ecf0, 0x6ee28, 0x6ee48
         };
         
         for (long offset : otherGotOffsets) {
-            long gotAddr = module.base + offset;
-            backend.mem_write(gotAddr, nullAddr);
-            System.out.println("[GOT修复] ✓ GOT[0x" + Long.toHexString(offset) + "] -> 0x" + Long.toHexString(stubNull) + " (返回NULL)");
+            backend.mem_write(module.base + offset, nullAddr);
+            System.out.println("[GOT修复] ✓ GOT[0x" + Long.toHexString(offset) + "] -> NULL stub");
         }
         
-        System.out.println("\n[GOT修复] ✓ 完成修复！");
-        System.out.println("[GOT修复]   - AAssetManager_fromJava 将返回假指针 0x" + Long.toHexString(fakeAssetManager));
-        System.out.println("[GOT修复]   - 其他7个AssetManager函数将返回NULL\n");
+        System.out.println("\n[GOT修复] ✓ 完成修复！\n");
     }
 
 }
