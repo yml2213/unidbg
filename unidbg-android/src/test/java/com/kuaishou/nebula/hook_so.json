@@ -1,0 +1,2089 @@
+[
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30374,
+    "timestamp": 2888,
+    "backtrace": [
+      {
+        "address": "0x7e39bb8240",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8240",
+          "name": "0x37240",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb8240",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8240",
+          "name": "0x37240",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e3be2a200",
+        "data": "0x7e56a2cf00"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30374,
+    "timestamp": 2918,
+    "backtrace": [
+      {
+        "address": "0x7e39bc6960",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bc6960",
+          "name": "JNI_OnLoad+0x10c",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bc6960",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bc6960",
+          "name": "JNI_OnLoad+0x10c",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e3be2a288",
+        "data": "0x7e56a2cf00"
+      },
+      {
+        "value": 65540
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30376,
+    "timestamp": 3503,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e39b7cb40",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "AttachCurrentThread",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "void*"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30376,
+    "timestamp": 3587,
+    "backtrace": [
+      {
+        "address": "0x7e39bb8440",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8440",
+          "name": "0x37440",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb8440",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8440",
+          "name": "0x37440",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e39b7cb38",
+        "data": "0x7e42eab780"
+      },
+      {
+        "value": "0x7e39b7cb20",
+        "data": "06000100000000002084bd567e00000000000000"
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "ExceptionCheck",
+      "args": [
+        "JNIEnv*"
+      ],
+      "ret": "jboolean"
+    },
+    "thread_id": 30376,
+    "timestamp": 3810,
+    "backtrace": [
+      {
+        "address": "0x7e39bb8464",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8464",
+          "name": "0x37464",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb8464",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8464",
+          "name": "0x37464",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "GetStaticMethodID",
+      "args": [
+        "JNIEnv*",
+        "jclass",
+        "char*",
+        "char*"
+      ],
+      "ret": "jmethodID"
+    },
+    "thread_id": 30376,
+    "timestamp": 3909,
+    "backtrace": [
+      {
+        "address": "0x7e39bb324c",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb324c",
+          "name": "0x3224c",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb324c",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb324c",
+          "name": "0x3224c",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      },
+      {
+        "value": "0x3b9a"
+      },
+      {
+        "value": "0x7e39be2954",
+        "data": "getSecEnvValue"
+      },
+      {
+        "value": "0x7e39be2963",
+        "data": "()I"
+      }
+    ],
+    "ret": {
+      "value": "0x9f5f3430",
+      "metadata": "getSecEnvValue()I"
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "ExceptionCheck",
+      "args": [
+        "JNIEnv*"
+      ],
+      "ret": "jboolean"
+    },
+    "thread_id": 30376,
+    "timestamp": 3984,
+    "backtrace": [
+      {
+        "address": "0x7e39bb3260",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3260",
+          "name": "0x32260",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb3260",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3260",
+          "name": "0x32260",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "CallStaticIntMethodV",
+      "args": [
+        "JNIEnv*",
+        "jclass",
+        "jmethodID",
+        "va_list"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30376,
+    "timestamp": 4069,
+    "backtrace": [
+      {
+        "address": "0x7e39bb3340",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3340",
+          "name": "0x32340",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb3340",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3340",
+          "name": "0x32340",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      },
+      {
+        "value": "0x3b9a"
+      },
+      {
+        "value": "0x9f5f3430",
+        "metadata": "getSecEnvValue()I"
+      },
+      {
+        "value": "0x7e39b7cb40"
+      }
+    ],
+    "ret": {
+      "value": -1
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "ExceptionCheck",
+      "args": [
+        "JNIEnv*"
+      ],
+      "ret": "jboolean"
+    },
+    "thread_id": 30376,
+    "timestamp": 4138,
+    "backtrace": [
+      {
+        "address": "0x7e39bb3294",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3294",
+          "name": "0x32294",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb3294",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3294",
+          "name": "0x32294",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30376,
+    "timestamp": 4207,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e39b7cb40",
+        "data": "0x7e42eab780"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "GetStaticMethodID",
+      "args": [
+        "JNIEnv*",
+        "jclass",
+        "char*",
+        "char*"
+      ],
+      "ret": "jmethodID"
+    },
+    "thread_id": 30376,
+    "timestamp": 4275,
+    "backtrace": [
+      {
+        "address": "0x7e39bbc718",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc718",
+          "name": "0x3b718",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bbc718",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc718",
+          "name": "0x3b718",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      },
+      {
+        "value": "0x3b9a"
+      },
+      {
+        "value": "0x7e39be2cff",
+        "data": "canRun"
+      },
+      {
+        "value": "0x7e39be2d06",
+        "data": "(I)I"
+      }
+    ],
+    "ret": {
+      "value": "0x9f5f3278",
+      "metadata": "canRun(I)I"
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "ExceptionCheck",
+      "args": [
+        "JNIEnv*"
+      ],
+      "ret": "jboolean"
+    },
+    "thread_id": 30376,
+    "timestamp": 4345,
+    "backtrace": [
+      {
+        "address": "0x7e39bbc72c",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc72c",
+          "name": "0x3b72c",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bbc72c",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc72c",
+          "name": "0x3b72c",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "CallStaticIntMethodV",
+      "args": [
+        "JNIEnv*",
+        "jclass",
+        "jmethodID",
+        "va_list"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30376,
+    "timestamp": 4418,
+    "backtrace": [
+      {
+        "address": "0x7e39bb3340",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3340",
+          "name": "0x32340",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb3340",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3340",
+          "name": "0x32340",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      },
+      {
+        "value": "0x3b9a"
+      },
+      {
+        "value": "0x9f5f3278",
+        "metadata": "canRun(I)I"
+      },
+      {
+        "value": "0x7e39b7cb40"
+      },
+      {
+        "value": 0
+      }
+    ],
+    "ret": {
+      "value": 1
+    },
+    "java_params": [
+      "jint"
+    ]
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "ExceptionCheck",
+      "args": [
+        "JNIEnv*"
+      ],
+      "ret": "jboolean"
+    },
+    "thread_id": 30376,
+    "timestamp": 4500,
+    "backtrace": [
+      {
+        "address": "0x7e39bbc768",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc768",
+          "name": "0x3b768",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bbc768",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc768",
+          "name": "0x3b768",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30376,
+    "timestamp": 4615,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e39b7cb40",
+        "data": "0x7e42eab780"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30481,
+    "timestamp": 4671,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e2d897b50",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "GetStaticMethodID",
+      "args": [
+        "JNIEnv*",
+        "jclass",
+        "char*",
+        "char*"
+      ],
+      "ret": "jmethodID"
+    },
+    "thread_id": 30376,
+    "timestamp": 4814,
+    "backtrace": [
+      {
+        "address": "0x7e39bbc718",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc718",
+          "name": "0x3b718",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bbc718",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc718",
+          "name": "0x3b718",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      },
+      {
+        "value": "0x3b9a"
+      },
+      {
+        "value": "0x7e39be2cff",
+        "data": "canRun"
+      },
+      {
+        "value": "0x7e39be2d06",
+        "data": "(I)I"
+      }
+    ],
+    "ret": {
+      "value": "0x9f5f3278",
+      "metadata": "canRun(I)I"
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30481,
+    "timestamp": 4860,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e2d897b90",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "ExceptionCheck",
+      "args": [
+        "JNIEnv*"
+      ],
+      "ret": "jboolean"
+    },
+    "thread_id": 30376,
+    "timestamp": 5030,
+    "backtrace": [
+      {
+        "address": "0x7e39bbc72c",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc72c",
+          "name": "0x3b72c",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bbc72c",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc72c",
+          "name": "0x3b72c",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30481,
+    "timestamp": 5062,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e2d897b90",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "CallStaticIntMethodV",
+      "args": [
+        "JNIEnv*",
+        "jclass",
+        "jmethodID",
+        "va_list"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30376,
+    "timestamp": 5139,
+    "backtrace": [
+      {
+        "address": "0x7e39bb3340",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3340",
+          "name": "0x32340",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb3340",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb3340",
+          "name": "0x32340",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      },
+      {
+        "value": "0x3b9a"
+      },
+      {
+        "value": "0x9f5f3278",
+        "metadata": "canRun(I)I"
+      },
+      {
+        "value": "0x7e39b7cb40"
+      },
+      {
+        "value": 1
+      }
+    ],
+    "ret": {
+      "value": 1
+    },
+    "java_params": [
+      "jint"
+    ]
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "ExceptionCheck",
+      "args": [
+        "JNIEnv*"
+      ],
+      "ret": "jboolean"
+    },
+    "thread_id": 30376,
+    "timestamp": 5300,
+    "backtrace": [
+      {
+        "address": "0x7e39bbc768",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc768",
+          "name": "0x3b768",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bbc768",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bbc768",
+          "name": "0x3b768",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e42eab780"
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30607,
+    "timestamp": 5730,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7dce7e1b50",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30481,
+    "timestamp": 5855,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e2d897b90",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30528,
+    "timestamp": 5879,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7dce6d5cc0",
+        "data": "0x7e56a30380"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30607,
+    "timestamp": 5997,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7dce7e1ac0",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "GetLongField",
+      "args": [
+        "JNIEnv*",
+        "jobject",
+        "jfieldID"
+      ],
+      "ret": "jlong"
+    },
+    "thread_id": 30528,
+    "timestamp": 6033,
+    "backtrace": [
+      {
+        "address": "0x7e39bb8678",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8678",
+          "name": "0x37678",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb8678",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8678",
+          "name": "0x37678",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7e56a30380"
+      },
+      {
+        "value": "0x3cca"
+      },
+      {
+        "value": "0x7009435c"
+      }
+    ],
+    "ret": {
+      "value": "-5476376602585044608"
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30481,
+    "timestamp": 6333,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7e2d897b50",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 30607,
+    "timestamp": 6369,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7dce7e1b50",
+        "data": "0x0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": -2
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 31063,
+    "timestamp": 14054,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7ce7520790",
+        "data": "0x7de001e4c0"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "GetLongField",
+      "args": [
+        "JNIEnv*",
+        "jobject",
+        "jfieldID"
+      ],
+      "ret": "jlong"
+    },
+    "thread_id": 31063,
+    "timestamp": 14694,
+    "backtrace": [
+      {
+        "address": "0x7e39bb8678",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8678",
+          "name": "0x37678",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb8678",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8678",
+          "name": "0x37678",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7de001e4c0"
+      },
+      {
+        "value": "0x3cca"
+      },
+      {
+        "value": "0x7009435c"
+      }
+    ],
+    "ret": {
+      "value": "-5476376602585044608"
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JavaVM",
+    "method": {
+      "name": "GetEnv",
+      "args": [
+        "JavaVM*",
+        "void**",
+        "jint"
+      ],
+      "ret": "jint"
+    },
+    "thread_id": 31078,
+    "timestamp": 19387,
+    "backtrace": [
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb82b8",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb82b8",
+          "name": "0x372b8",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0xb400007f5c479380"
+      },
+      {
+        "value": "0x7dbab00690",
+        "data": "0x7d30814380"
+      },
+      {
+        "value": 65542
+      }
+    ],
+    "ret": {
+      "value": 0
+    },
+    "java_params": []
+  },
+  {
+    "struct": "JNIEnv",
+    "method": {
+      "name": "GetLongField",
+      "args": [
+        "JNIEnv*",
+        "jobject",
+        "jfieldID"
+      ],
+      "ret": "jlong"
+    },
+    "thread_id": 31078,
+    "timestamp": 19481,
+    "backtrace": [
+      {
+        "address": "0x7e39bb8678",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8678",
+          "name": "0x37678",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      },
+      {
+        "address": "0x7e39bb8678",
+        "module": {
+          "name": "libkwsgmain.so",
+          "base": "0x7e39b81000",
+          "size": 462848,
+          "path": "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/lib/arm64/libkwsgmain.so"
+        },
+        "symbol": {
+          "address": "0x7e39bb8678",
+          "name": "0x37678",
+          "moduleName": "libkwsgmain.so",
+          "fileName": "",
+          "lineNumber": 0
+        }
+      }
+    ],
+    "args": [
+      {
+        "value": "0x7d30814380"
+      },
+      {
+        "value": "0x3cca"
+      },
+      {
+        "value": "0x7009435c"
+      }
+    ],
+    "ret": {
+      "value": "-5476376602585044608"
+    },
+    "java_params": []
+  }
+]
