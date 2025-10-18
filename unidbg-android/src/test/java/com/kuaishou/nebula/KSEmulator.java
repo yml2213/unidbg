@@ -110,138 +110,85 @@ public class KSEmulator extends AbstractJni {
     }
 
     /**
-     * Hook 签名验证相关的内存操作
-     * 目标：找出SO库是如何对比签名的，并尝试绕过
+     * 🎯 Hook关键验证函数 - 绕过白名单检查和APK完整性校验（终极版）
+     *
+     * 根据sub_3E5C0.txt分析，该函数执行包名/签名白名单验证：
+     * 1. 调用 sub_3DDB0、sub_DDF8、sub_EDA0 检查签名和包名
+     * 2. 执行白名单字符串匹配（按逗号分割、小写转换、memcmp比较）
+     * 3. 根据验证结果设置全局标志位：
+     *    - 失败：qword_70910 |= 0x8000000000000uLL (Line 414)
+     *    - 成功：qword_70910 &= ~0x8000000000000uLL (Line 429)
+     *    - 成功：qword_70910 |= 0x1000000000000uLL (Line 490)
+     * 4. 验证失败返回 0，成功返回 1
+     *
+     * 🔥 终极策略：Hook APK校验子函数（sub_DDF8, sub_EDA0），直接跳过验证
      */
     private void hookSignatureVerification() {
-        System.out.println("[签名Hook] 设置签名校验绕过...");
+        System.out.println("\n[签名绕过] 🎯 Hook签名验证函数（入口拦截策略）");
         Backend backend = emulator.getBackend();
 
-        // 根据错误码 0x111bc (70076) 的调用位置，尝试patch签名校验函数
-        // 策略：hook nativeReport函数，当检测到签名错误时不执行后续失败逻辑
+        // ⚠️ 新策略：直接在 sub_3E5C0 入口处拦截，跳过所有子函数调用
+        final long SUB_3E5C0_ADDR = module.base + 0x3E5C0;
+        System.out.println("[签名绕过] Hook sub_3E5C0 (主验证函数) @ 0x" + Long.toHexString(SUB_3E5C0_ADDR));
 
-        try {
-            // 方法1: patch可能的签名校验失败分支
-            // 从日志看，签名校验在 0x10000-0x18000 区域
-            // 在nativeReport(0x111bc)之后，代码继续读取参数[5]和数据
-            // 说明nativeReport只是记录错误，真正的失败判断在后面
-
-            // 尝试patch几个可能的条件跳转，让签名校验总是通过
-            patchSignatureCheck();
-
-            // 方法2: 设置更多可能的"签名验证通过"标志位
-            long[] possibleFlags = {
-                    module.base + 0x70918,  // 可能的签名验证标志
-                    module.base + 0x70920,
-                    module.base + 0x70928,
-                    module.base + 0x70930,
-                    module.base + 0x70938   // 新增
-            };
-
-            for (long flagAddr : possibleFlags) {
-                try {
-                    byte[] flagValue = {0x01};  // 设置为1(已验证)
-                    backend.mem_write(flagAddr, flagValue);
-                    System.out.println("[签名Hook]   设置标志 @ 0x" + Long.toHexString(flagAddr) + " = 0x01");
-                } catch (Exception e) {
-                    // 忽略无法写入的地址
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("[签名Hook] ⚠ 设置失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Patch签名校验函数
-     * 策略：在读取签名后、判断签名是否合法的地方，直接跳过失败分支
-     */
-    private void patchSignatureCheck() {
-        Backend backend = emulator.getBackend();
-
-        // 从日志分析签名校验的流程：
-        // 1. 调用 nativeReport(0x111b7) - APK路径相关
-        // 2. 打开APK文件
-        // 3. 调用 nativeReport(0x111bc) - 签名校验失败
-        // 4. 读取参数[5]和参数[0]（数据）
-        // 5. 返回0（失败）
-
-        // 关键：在步骤3之后，代码应该有一个条件判断
-        // 如果签名失败，就返回0；如果成功，就继续执行加密
-
-        // 策略：找到"如果签名失败则返回0"的判断，patch成NOP或强制跳转到成功分支
-
-        try {
-            // 这需要通过IDA分析确定具体地址
-            // 暂时输出一些可能的关键地址供参考
-            System.out.println("[签名Patch] 关键函数地址:");
-            System.out.println("[签名Patch]   - doCommandNative: 0x40cd4");
-            System.out.println("[签名Patch]   - 可能的签名检查: 0x10000-0x18000");
-            System.out.println("[签名Patch] 提示: 需要用IDA找到nativeReport(0x111bc)之后的条件跳转");
-
-            // 尝试一个通用的方法：Hook读取签名后的比较操作
-            // 监控内存读取，找到签名数据被读取的位置
-            hookMemoryAccess();
-
-        } catch (Exception e) {
-            System.out.println("[签名Patch] ⚠ Patch失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Hook内存访问，监控签名数据的读取和比较
-     */
-    private void hookMemoryAccess() {
-        // 这需要Unidbg的MemoryHook功能
-        // 由于签名校验涉及内存比较，我们可以监控对签名数据的访问
-        System.out.println("[内存Hook] 暂不实现，需要更详细的逆向分析");
-    }
-
-    /**
-     * Hook doCommandNative的返回点
-     * 如果返回0（失败），尝试找到失败的原因并修复
-     */
-    private void hookDoCommandNativeReturn() {
-        Backend backend = emulator.getBackend();
-
-        // Hook RET指令，在函数返回前检查X0寄存器（返回值）
         backend.hook_add_new(new CodeHook() {
+            private int callCount = 0;
+
             @Override
             public void hook(Backend backend, long address, int size, Object user) {
-                // 检查是否是doCommandNative函数内的RET指令
-                if (address >= module.base + 0x40cd4 && address < module.base + 0x43000) {
-                    try {
-                        byte[] code = backend.mem_read(address, 4);
-                        // ARM64 RET指令: 0xD65F03C0
-                        if (code.length == 4 &&
-                            code[0] == (byte)0xC0 && code[1] == (byte)0x03 &&
-                            code[2] == (byte)0x5F && code[3] == (byte)0xD6) {
+                // ⭐ 在函数入口处直接拦截
+                if (address == SUB_3E5C0_ADDR) {
+                    callCount++;
+                    System.out.println("\n[🔧 签名绕过] sub_3E5C0 被调用 (调用#" + callCount + ")，直接跳过");
 
-                            long x0 = backend.reg_read(Arm64Const.UC_ARM64_REG_X0).longValue();
-                            System.out.println("[返回Hook] doCommandNative即将返回: X0 = 0x" + Long.toHexString(x0));
+                    // 1. 设置返回值为成功
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, 1);
 
-                            if (x0 == 0) {
-                                System.out.println("[返回Hook] ⚠️ 检测到返回0（失败）");
-                                System.out.println("[返回Hook] 提示: 这是签名校验失败导致的");
-                                // 注意：直接修改返回值可能导致其他问题
-                                // 需要确保加密数据已经生成
-                            }
-                        }
-                    } catch (Exception e) {
-                        // 忽略
+                    // 2. 修复全局标志位 qword_70910
+                    long qword_70910_addr = module.base + 0x70910;
+                    byte[] flagBytes = backend.mem_read(qword_70910_addr, 8);
+                    java.nio.ByteBuffer buf = java.nio.ByteBuffer.wrap(flagBytes);
+                    buf.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                    long currentFlag = buf.getLong();
+
+                    System.out.println("[签名绕过]   当前 qword_70910: 0x" + Long.toHexString(currentFlag));
+
+                    // 设置正确的标志位
+                    // 参考 0x40cd4.txt line 429: qword_70910 &= ~0x8000000000000uLL
+                    // 参考 0x40cd4.txt line 490: qword_70910 |= 0x1000000000000uLL
+                    // 参考 0x40cd4.txt line 427: qword_70910 |= 0x800000000000uLL
+                    long newFlag = currentFlag;
+                    newFlag &= ~0x8000000000000L;   // 清除失败标志
+                    newFlag |= 0x1800000000000L;    // 设置两个成功标志 (0x1000000000000 | 0x800000000000)
+
+                    byte[] newFlagBytes = new byte[8];
+                    for (int i = 0; i < 8; i++) {
+                        newFlagBytes[i] = (byte) ((newFlag >> (i * 8)) & 0xFF);
                     }
+                    backend.mem_write(qword_70910_addr, newFlagBytes);
+
+                    System.out.println("[签名绕过]   修复后 qword_70910: 0x" + Long.toHexString(newFlag));
+
+                    // 3. 直接跳转到返回地址，跳过整个函数
+                    long lr = backend.reg_read(Arm64Const.UC_ARM64_REG_LR).longValue();
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_PC, lr);
+
+                    System.out.println("[签名绕过]   ✅ 已跳过所有验证，返回成功 (LR=0x" + Long.toHexString(lr) + ")");
                 }
             }
 
             @Override
-            public void onAttach(com.github.unidbg.arm.backend.UnHook unHook) {}
+            public void onAttach(UnHook unHook) {
+                System.out.println("[签名绕过] ✓ Hook 已激活");
+            }
 
             @Override
             public void detach() {}
-        }, module.base + 0x40cd4, module.base + 0x43000, null);
+        }, SUB_3E5C0_ADDR, SUB_3E5C0_ADDR + 4, null);  // 只Hook入口的4字节
 
-        System.out.println("[返回Hook] 已设置返回值监控");
+        System.out.println("[签名绕过] ✓ Hook设置完成\n");
     }
+
 
     /**
      * 设置反调试变量监控
@@ -429,6 +376,16 @@ public class KSEmulator extends AbstractJni {
             System.out.println("[初始化]   ✓ qword_70910 @ 0x" + Long.toHexString(qword_70910_addr) +
                     " = 0x" + Long.toHexString(flagValue));
 
+            // 验证写入是否成功
+            byte[] verify70910 = backend.mem_read(qword_70910_addr, 8);
+            java.nio.ByteBuffer buf1 = java.nio.ByteBuffer.wrap(verify70910);
+            buf1.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            long actualValue = buf1.getLong();
+            System.out.println("[验证]     实际读取到的值: 0x" + Long.toHexString(actualValue));
+            if (actualValue != flagValue) {
+                System.out.println("[验证]     ❌ 警告：写入的值与期望不符！");
+            }
+
             // 2. 设置 byte_7091F 的 bit 5 (0x20)
             long byte_7091F_addr = module.base + 0x7091F;
             byte[] currentByte = backend.mem_read(byte_7091F_addr, 1);
@@ -438,6 +395,13 @@ public class KSEmulator extends AbstractJni {
             System.out.println("[初始化]   ✓ byte_7091F @ 0x" + Long.toHexString(byte_7091F_addr) +
                     " = 0x" + Integer.toHexString(currentByte[0] & 0xFF) +
                     " (was 0x" + Integer.toHexString(oldValue & 0xFF) + ")");
+
+            // 验证写入是否成功
+            byte[] verify7091F = backend.mem_read(byte_7091F_addr, 1);
+            System.out.println("[验证]     实际读取到的值: 0x" + Integer.toHexString(verify7091F[0] & 0xFF));
+            if ((verify7091F[0] & 0x20) == 0) {
+                System.out.println("[验证]     ❌ 警告：bit 5 未被正确设置！");
+            }
         } catch (Exception e) {
             System.out.println("[初始化] ❌ 设置标志位失败: " + e.getMessage());
             e.printStackTrace();
@@ -698,11 +662,191 @@ public class KSEmulator extends AbstractJni {
     }
 
 
+    /**
+     * 在加密调用前强制禁用反调试检查
+     *
+     * 问题分析：
+     * 通过IDA Pro反编译doCommandNative函数发现，在地址0x42c00（第2429-2432行）
+     * 有关键的反调试检查逻辑：
+     *
+     * ```c
+     * if ( v141 < 10 || (v143 & 1) == 0 )
+     *     break;  // 进入正常加密流程
+     * ```
+     *
+     * 其中：
+     * - v141 = dword_70C10（第一个反调试标志变量）
+     * - v143 = (dword_70C14 - 1) * dword_70C14（第二个反调试标志变量的计算式）
+     *
+     * 反调试触发条件：
+     * - 条件A：dword_70C10 >= 10
+     * - 条件B：((dword_70C14-1) * dword_70C14) & 1 != 0
+     * - 如果 A && B 都为true，代码会进入错误分支，最终返回0（加密失败）
+     *
+     * 解决方案：
+     * 我们需要让至少一个条件为false，这里选择让两个条件都为false：
+     * 1. 设置 dword_70C10 = -1 (0xFFFFFFFF)
+     *    - 作为有符号int，-1 < 10，使条件A为false
+     * 2. 设置 dword_70C14 = -1 (0xFFFFFFFF)
+     *    - 计算：((-1) - 1) * (-1) = (-2) * (-1) = 2
+     *    - 检查：2 & 1 = 0，使条件B为false
+     *
+     * 这样反调试检查就会通过，代码继续执行加密逻辑。
+     *
+     * 调用时机：
+     * 必须在每次调用doCommandNative进行加密操作之前调用此方法。
+     */
+    private void disableAntiDebugBeforeEncryption() {
+        Backend backend = emulator.getBackend();
+        System.out.println("\n[反调试绕过] 开始设置反调试变量...");
+
+        // 定义反调试变量的地址（相对于SO基址的偏移量）
+        final long DWORD_70C10_OFFSET = 0x70C10;  // 第一个反调试标志
+        final long DWORD_70C14_OFFSET = 0x70C14;  // 第二个反调试标志
+
+        final long dword_70C10_addr = module.base + DWORD_70C10_OFFSET;
+        final long dword_70C14_addr = module.base + DWORD_70C14_OFFSET;
+
+        System.out.println("[反调试绕过] 变量地址:");
+        System.out.println("[反调试绕过]   - dword_70C10 @ 0x" + Long.toHexString(dword_70C10_addr));
+        System.out.println("[反调试绕过]   - dword_70C14 @ 0x" + Long.toHexString(dword_70C14_addr));
+
+        try {
+            // 读取原始值（用于对比）
+            byte[] bytes1 = backend.mem_read(dword_70C10_addr, 4);
+            java.nio.ByteBuffer buf1 = java.nio.ByteBuffer.wrap(bytes1);
+            buf1.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            int original_70C10 = buf1.getInt();
+
+            byte[] bytes2 = backend.mem_read(dword_70C14_addr, 4);
+            java.nio.ByteBuffer buf2 = java.nio.ByteBuffer.wrap(bytes2);
+            buf2.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            int original_70C14 = buf2.getInt();
+
+            System.out.println("[反调试绕过] 原始值:");
+            System.out.println("[反调试绕过]   - dword_70C10 = " + original_70C10 +
+                             " (0x" + Integer.toHexString(original_70C10) + ")");
+            System.out.println("[反调试绕过]   - dword_70C14 = " + original_70C14 +
+                             " (0x" + Integer.toHexString(original_70C14) + ")");
+
+            // 设置 dword_70C10 = -1 (0xFFFFFFFF)
+            // -1的小端序表示：FF FF FF FF
+            byte[] newValue70C10 = new byte[]{(byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF};
+            backend.mem_write(dword_70C10_addr, newValue70C10);
+
+            // 设置 dword_70C14 = -1 (0xFFFFFFFF)
+            byte[] newValue70C14 = new byte[]{(byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF};
+            backend.mem_write(dword_70C14_addr, newValue70C14);
+
+            System.out.println("[反调试绕过] 新值设置:");
+            System.out.println("[反调试绕过]   - dword_70C10 = -1 (0xFFFFFFFF)");
+            System.out.println("[反调试绕过]   - dword_70C14 = -1 (0xFFFFFFFF)");
+
+            // 验证写入是否成功
+            byte[] verify1 = backend.mem_read(dword_70C10_addr, 4);
+            java.nio.ByteBuffer verifyBuf1 = java.nio.ByteBuffer.wrap(verify1);
+            verifyBuf1.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            int actual_70C10 = verifyBuf1.getInt();
+
+            byte[] verify2 = backend.mem_read(dword_70C14_addr, 4);
+            java.nio.ByteBuffer verifyBuf2 = java.nio.ByteBuffer.wrap(verify2);
+            verifyBuf2.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            int actual_70C14 = verifyBuf2.getInt();
+
+            System.out.println("[反调试绕过] 验证写入:");
+            System.out.println("[反调试绕过]   - dword_70C10 实际值: " + actual_70C10 +
+                             " (0x" + Integer.toHexString(actual_70C10) + ")");
+            System.out.println("[反调试绕过]   - dword_70C14 实际值: " + actual_70C14 +
+                             " (0x" + Integer.toHexString(actual_70C14) + ")");
+
+            // 验证反调试条件
+            boolean condition1 = actual_70C10 < 10;
+            int expression = (actual_70C14 - 1) * actual_70C14;
+            boolean condition2 = (expression & 1) == 0;
+
+            System.out.println("[反调试绕过] 条件检查:");
+            System.out.println("[反调试绕过]   - 条件1: dword_70C10 < 10 ? " +
+                             condition1 + " (" + actual_70C10 + " < 10)");
+            System.out.println("[反调试绕过]   - 条件2: ((dword_70C14-1)*dword_70C14) & 1 == 0 ? " +
+                             condition2 + " ((" + actual_70C14 + "-1)*" + actual_70C14 + " & 1 = " + (expression & 1) + ")");
+
+            if (condition1 || condition2) {
+                System.out.println("[反调试绕过] ✅ 反调试检查将会通过（至少一个条件满足）");
+            } else {
+                System.out.println("[反调试绕过] ⚠️ 警告：反调试检查可能仍会失败");
+            }
+
+            if (actual_70C10 != -1 || actual_70C14 != -1) {
+                System.out.println("[反调试绕过] ❌ 警告：写入值与期望不符！");
+            }
+
+        } catch (Exception e) {
+            System.out.println("[反调试绕过] ❌ 设置失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        System.out.println("[反调试绕过] ✓ 设置完成\n");
+    }
+
     public String encryptEncData() {
         System.out.println("\n[encryptEncData] 开始执行 encData 调用...");
 
-        // ⚠️ 关键发现：opcode 10400 和 10408 对参数[0]的类型期望不同！
-        int opcode = 10400;  // 使用 10400
+        // 🔍 启用详细的JNI调用跟踪
+        setupDetailedJNITrace();
+
+        // ⚠️ 关键：强制禁用反调试检查（在加密调用前）
+        disableAntiDebugBeforeEncryption();
+
+        // 🔍 在加密前验证全局标志位是否正确设置
+        Backend backend = emulator.getBackend();
+        System.out.println("\n[加密前检查] 验证全局标志位状态:");
+
+        // 检查 qword_70910
+        long qword_70910_addr = module.base + 0x70910;
+        byte[] verify70910 = backend.mem_read(qword_70910_addr, 8);
+        java.nio.ByteBuffer buf1 = java.nio.ByteBuffer.wrap(verify70910);
+        buf1.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        long actualValue70910 = buf1.getLong();
+        System.out.println("[加密前检查]   qword_70910 @ 0x" + Long.toHexString(qword_70910_addr) +
+                         " = 0x" + Long.toHexString(actualValue70910));
+        long expectedFlag = 0x1800000000000L;
+        if ((actualValue70910 & expectedFlag) == 0) {
+            System.out.println("[加密前检查]   ❌ 警告：qword_70910 标志位检查失败！");
+            System.out.println("[加密前检查]      期望: (value & 0x1800000000000) != 0");
+            System.out.println("[加密前检查]      实际: (0x" + Long.toHexString(actualValue70910) +
+                             " & 0x1800000000000) = 0x" + Long.toHexString(actualValue70910 & expectedFlag));
+        } else {
+            System.out.println("[加密前检查]   ✓ qword_70910 检查通过");
+        }
+
+        // 检查 byte_7091F
+        long byte_7091F_addr = module.base + 0x7091F;
+        byte[] verify7091F = backend.mem_read(byte_7091F_addr, 1);
+        System.out.println("[加密前检查]   byte_7091F @ 0x" + Long.toHexString(byte_7091F_addr) +
+                         " = 0x" + Integer.toHexString(verify7091F[0] & 0xFF));
+        if ((verify7091F[0] & 0x20) == 0) {
+            System.out.println("[加密前检查]   ❌ 警告：byte_7091F bit 5 未设置！");
+            System.out.println("[加密前检查]      期望: (value & 0x20) != 0");
+        } else {
+            System.out.println("[加密前检查]   ✓ byte_7091F bit 5 检查通过");
+        }
+        System.out.println();
+
+        // ⚠️ 重要发现: trace log 显示在 0x042e08 处有强制检查 (opcode | 8) == 0x28AE
+        // 如果不满足,会跳转到 0x43368 失败路径
+        // 这不是可选分支,而是必须满足的条件!
+        //
+        // 满足条件的 opcode: (opcode | 8) == 0x28AE (10414)
+        // - 10406: (10406 | 8) = 0x28A6 | 8 = 0x28AE ✅
+        // - 10414: (10414 | 8) = 0x28AE | 8 = 0x28AE ✅
+        //
+        // 真机log可能是:
+        // 1. 不同版本的SO库
+        // 2. 十六进制显示 (0x28A0 = 10400十进制)
+        // 3. 或者有其他绕过机制
+        //
+        // 现在先用 10406 测试,看能否通过 (opcode | 8) 检查
+        int opcode = 10406;  // 🔧 临时修改: 测试能否通过 (opcode|8)==0x28AE 检查
         System.out.println("[encryptEncData] opcode: " + opcode);
         System.out.println("[encryptEncData] 使用共享Context: " + context);
 
@@ -741,43 +885,57 @@ public class KSEmulator extends AbstractJni {
         requestParam = requestByteArray;
         System.out.println("[encryptEncData] ✅ 参数[0]: ByteArray (长度=" + requestBytes.length + ")");
 
-        StringObject appKey = new StringObject(vm, "d7b7d042-d4f2-4012-be60-d97ff2429c17");
-        vm.addLocalObject(appKey);
+        // 参数[1]: UUID字符串
+        StringObject uuid1 = new StringObject(vm, "d7b7d042-d4f2-4012-be60-d97ff2429c17");
+        vm.addLocalObject(uuid1);
 
-        DvmInteger zero = DvmInteger.valueOf(vm, 0);
-        vm.addLocalObject(zero);
+        // 参数[2]: 整数 0
+        DvmInteger intZero = DvmInteger.valueOf(vm, 0);
+        vm.addLocalObject(intZero);
 
-        // 使用共享的Context对象，而不是创建新的
-        vm.addLocalObject(context);
+        // 参数[3]: null（真实环境中是 null）
+        // 不需要 addLocalObject，直接在数组中传 null
 
-        DvmBoolean boolTrueFirst = DvmBoolean.valueOf(vm, true);
-        vm.addLocalObject(boolTrueFirst);
+        // 参数[4]: Application 对象（com.yxcorp.gifshow.App）
+        // 使用共享的Context对象
+        DvmObject<?> appObject = context;
 
-        StringObject deviceKey = new StringObject(vm, "95147564-9763-4413-a937-6f0e3c12caf1");
-        vm.addLocalObject(deviceKey);
+        // 参数[5]: boolean true
+        DvmBoolean boolTrue1 = DvmBoolean.valueOf(vm, true);
+        vm.addLocalObject(boolTrue1);
 
-        // 参数数组：[ArrayObject(ByteArray), String, Integer, null, Context, Boolean, Boolean, String]
-        DvmBoolean boolTrueSecond = DvmBoolean.valueOf(vm, true);
-        vm.addLocalObject(boolTrueSecond);
+        // 参数[6]: boolean true
+        DvmBoolean boolTrue2 = DvmBoolean.valueOf(vm, true);
+        vm.addLocalObject(boolTrue2);
 
+        // 参数[7]: UUID字符串
+        StringObject uuid2 = new StringObject(vm, "95147564-9763-4413-a937-6f0e3c12caf1");
+        vm.addLocalObject(uuid2);
+
+        // 🔍 根据 encData.log 真实抓包，参数结构：
+        // [0] byte[] - 加密数据
+        // [1] String - UUID-1
+        // [2] int - 0
+        // [3] null - 空对象
+        // [4] Application - App对象
+        // [5] boolean - true
+        // [6] boolean - true
+        // [7] String - UUID-2
         ArrayObject paramsArray = new ArrayObject(
-                requestParam,      // [0] ByteArray 或 ArrayObject(StringObject(Hex))
-                appKey,            // [1] app key
-                zero,              // [2] Integer 0
-                null,              // [3] null
-                context,           // [4] Context
-                boolTrueFirst,     // [5] Boolean true
-                boolTrueSecond,    // [6] Boolean true
-                deviceKey          // [7] device key
+                requestParam,      // [0] ByteArray
+                uuid1,             // [1] UUID-1
+                intZero,           // [2] Integer 0
+                null,              // [3] null ⚠️ 关键修正
+                appObject,         // [4] Application
+                boolTrue1,         // [5] Boolean true
+                boolTrue2,         // [6] Boolean true
+                uuid2              // [7] UUID-2
         );
         System.out.println("[encryptEncData] 参数数组长度: " + 8);
         list.add(vm.addLocalObject(paramsArray));
 
         System.out.println("[encryptEncData] 即将调用 doCommandNative (0x40cd4)...");
-//        emulator.traceCode();
-
-        // 🔧 Hook返回地址，监控函数返回值
-        hookDoCommandNativeReturn();
+        emulator.traceCode(module.base + 0x42bc8, module.base + 0x43000);  // 跟踪GetByteArrayRegion之后的代码
 
         Number result = module.callFunction(emulator, 0x40cd4, list.toArray());
 
@@ -931,8 +1089,10 @@ public class KSEmulator extends AbstractJni {
         switch (signature) {
             case "com/kuaishou/android/security/internal/dispatch/JNICLibrary->getSecEnvValue()I": {
                 System.out.println("[🔍 getSecEnvValue] 返回环境值检查结果");
-                // 真机返回-1表示某些环境检查失败,但我们返回0或1表示通过
-                return 1;
+                // ⚠️ 关键修复：C代码中检查 v149 == 1，如果为1则加密失败
+                // 必须返回 0 或 -1 才能让加密继续执行
+                System.out.println("[🔍 getSecEnvValue] ✅ 返回 0（绕过 v149 == 1 检查）");
+                return 0;  // 修改为0，让加密流程继续
             }
             case "com/kuaishou/android/security/internal/dispatch/JNICLibrary->canRun(I)I": {
                 int param = vaList.getIntArg(0);
@@ -957,6 +1117,26 @@ public class KSEmulator extends AbstractJni {
             }
         }
         return super.callLongMethodV(vm, dvmObject, signature, vaList);
+    }
+
+    @Override
+    public int getIntField(BaseVM vm, DvmObject<?> dvmObject, String signature) {
+        System.out.println("[getIntField] 请求字段: " + signature + " from " + dvmObject.getClass().getSimpleName());
+
+        switch (signature) {
+            case "java/lang/Integer->value:I": {
+                // Integer对象的value字段
+                if (dvmObject instanceof DvmInteger) {
+                    int value = ((DvmInteger) dvmObject).getValue();
+                    System.out.println("[getIntField] Integer.value = " + value);
+                    return value;
+                }
+                System.out.println("[getIntField] ⚠️ 警告: 对象不是DvmInteger类型");
+                return 0;
+            }
+        }
+
+        return super.getIntField(vm, dvmObject, signature);
     }
 
     @Override
@@ -990,6 +1170,21 @@ public class KSEmulator extends AbstractJni {
             case "com/kuaishou/android/security/internal/common/ExceptionProxy->nativeReport(ILjava/lang/String;)V": {
                 int code = vaList.getIntArg(0);
                 String message = vaList.getObjectArg(1).getValue().toString();
+
+                // ⭐ 签名绕过：拦截所有签名验证相关的错误报告
+                // 错误码说明：
+                // - 0x111b7 (70071): APK签名验证失败 - ZIP读取/解析错误
+                // - 0x111bc (70076): 证书链验证失败
+                // - 0x11180 (70016): 包名/签名不在白名单
+                if (code == 0x111b7 || code == 0x111bc || code == 0x11180) {
+                    System.out.println("\n[🔧 签名绕过] 拦截签名验证错误报告");
+                    System.out.println("[签名绕过]   错误码: 0x" + Integer.toHexString(code));
+                    System.out.println("[签名绕过]   消息: " + message);
+                    System.out.println("[签名绕过]   ⚠️ 注意：仅拦截报告，内部状态可能已损坏");
+                    System.out.println("[签名绕过]   ✅ 已忽略，继续执行\n");
+                    return;  // 阻止错误报告
+                }
+
                 System.out.println("\n[❌ nativeReport] 错误码: 0x" + Integer.toHexString(code) + " (" + code + ")");
                 System.out.println("[❌ nativeReport] 消息: " + message);
 
@@ -1010,12 +1205,6 @@ public class KSEmulator extends AbstractJni {
                         break;
                     case 0x111e5: // 70117
                         System.out.println("[❌ 分析] 70117 = 全局标志位检查失败");
-                        break;
-                    case 0x111b7: // 70071
-                        System.out.println("[❌ 分析] 70071 = APK路径/签名相关");
-                        break;
-                    case 0x111bc: // 70076
-                        System.out.println("[❌ 分析] 70076 = 签名校验相关");
                         break;
                 }
                 System.out.println();
@@ -1462,6 +1651,18 @@ public class KSEmulator extends AbstractJni {
             sb.append(String.format("%02x", b & 0xFF));
         }
         return sb.toString();
+    }
+
+    /**
+     * 设置详细的JNI调用跟踪
+     * 目标：追踪所有从native回调到Java的方法调用，特别关注返回值
+     */
+    private void setupDetailedJNITrace() {
+        System.out.println("\n[JNI跟踪] 开始设置详细的JNI调用跟踪...");
+        System.out.println("[JNI跟踪] 目标：找出为何加密返回0\n");
+
+        // 标记：我们需要监控所有JNI回调的返回值
+        // 特别是那些可能影响加密成功/失败的方法
     }
 
 
