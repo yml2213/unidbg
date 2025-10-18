@@ -186,6 +186,63 @@ public class KSEmulator extends AbstractJni {
             public void detach() {}
         }, SUB_3E5C0_ADDR, SUB_3E5C0_ADDR + 4, null);  // 只Hook入口的4字节
 
+        // 🔧 新增：修复签名验证失败的副作用
+        // 问题：签名验证失败后，栈偏移 [sp+0x30] 被设置为 -1 (0xffffffff)
+        // 在 0x042dfc 处读取这个值会导致 opcode 检查失败
+        // 解决：在读取之前修复这个值为 0
+        final long STACK_FIX_ADDR = module.base + 0x042dfc;
+        System.out.println("[栈修复] Hook 0x042dfc (修复签名验证失败的副作用)");
+
+        backend.hook_add_new(new CodeHook() {
+            @Override
+            public void hook(Backend backend, long address, int size, Object user) {
+                // 读取SP寄存器
+                long sp = backend.reg_read(Arm64Const.UC_ARM64_REG_SP).longValue();
+
+                // 读取 [sp+0x30] 的当前值
+                byte[] currentBytes = backend.mem_read(sp + 0x30, 4);
+                java.nio.ByteBuffer buf = java.nio.ByteBuffer.wrap(currentBytes);
+                buf.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                int currentValue = buf.getInt();
+
+                System.out.println(String.format(
+                    "\n[栈修复] 0x042dfc: [sp+0x30] 当前值 = 0x%08x (%d)",
+                    currentValue, currentValue
+                ));
+
+                // 如果值是 -1 (0xffffffff)，说明签名验证失败，需要修复
+                if (currentValue == -1 || currentValue == 0xffffffff) {
+                    System.out.println("[栈修复]   ⚠️ 检测到签名验证失败标志 (0xffffffff)");
+                    System.out.println("[栈修复]   🔧 修复为 0 (表示成功)");
+
+                    // 写入 0 (表示没有错误)
+                    byte[] newValue = new byte[]{0, 0, 0, 0};
+                    backend.mem_write(sp + 0x30, newValue);
+
+                    // 验证写入
+                    byte[] verifyBytes = backend.mem_read(sp + 0x30, 4);
+                    java.nio.ByteBuffer verifyBuf = java.nio.ByteBuffer.wrap(verifyBytes);
+                    verifyBuf.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                    int verifyValue = verifyBuf.getInt();
+
+                    System.out.println(String.format(
+                        "[栈修复]   ✅ 修复后值 = 0x%08x (%d)",
+                        verifyValue, verifyValue
+                    ));
+                } else {
+                    System.out.println("[栈修复]   ✓ 值正常，无需修复");
+                }
+            }
+
+            @Override
+            public void onAttach(UnHook unHook) {
+                System.out.println("[栈修复] ✓ Hook 已激活");
+            }
+
+            @Override
+            public void detach() {}
+        }, STACK_FIX_ADDR, STACK_FIX_ADDR + 4, null);
+
         System.out.println("[签名绕过] ✓ Hook设置完成\n");
     }
 
@@ -414,15 +471,28 @@ public class KSEmulator extends AbstractJni {
         @Override
         public FileResult<AndroidFileIO> resolve(Emulator<AndroidFileIO> emulator, String pathname, int oflags) {
             // 打印所有文件访问请求，无论是否处理
-            System.out.println("检测到文件打开 File open request: " + pathname);
+            System.out.println("[IOResolver] 文件打开请求: " + pathname + " (flags=0x" + Integer.toHexString(oflags) + ")");
 
             // ⭐ 关键修复：拦截APK路径访问，返回真实的APK文件
             // SO库会尝试打开getPackageCodePath()返回的路径
             if (pathname != null && pathname.contains("base.apk")) {
                 File realApk = new File("unidbg-android/apks/ksjsb/ksjsb_13.8.40.10657.apk");
+                System.out.println("[IOResolver] 🔍 APK访问请求:");
+                System.out.println("[IOResolver]   请求路径: " + pathname);
+                System.out.println("[IOResolver]   真实路径: " + realApk.getAbsolutePath());
+                System.out.println("[IOResolver]   文件存在: " + realApk.exists());
+
                 if (realApk.exists()) {
-                    System.out.println("[IOResolver] ✓ 返回真实APK文件: " + realApk.getAbsolutePath());
-                    return FileResult.<AndroidFileIO>success(new SimpleFileIO(oflags, realApk, pathname));
+                    System.out.println("[IOResolver]   文件大小: " + realApk.length() + " 字节");
+                    System.out.println("[IOResolver]   可读权限: " + realApk.canRead());
+
+                    try {
+                        System.out.println("[IOResolver] ✅ 返回真实APK文件");
+                        return FileResult.<AndroidFileIO>success(new SimpleFileIO(oflags, realApk, pathname));
+                    } catch (Exception e) {
+                        System.out.println("[IOResolver] ❌ 打开APK文件失败: " + e.getMessage());
+                        e.printStackTrace();
+                    }
                 } else {
                     System.out.println("[IOResolver] ❌ APK文件不存在: " + realApk.getAbsolutePath());
                 }
@@ -626,11 +696,16 @@ public class KSEmulator extends AbstractJni {
     }
 
     public static void main(String[] args) {
-        KSEmulator emulator = new KSEmulator();
+        KSEmulator ksEmulator = new KSEmulator();
+
+        // 🔍 创建ExecutionTracer进行详细跟踪
+        System.out.println("\n========== 启动详细执行跟踪 ==========");
+        ExecutionTracer tracer = new ExecutionTracer(ksEmulator.emulator, ksEmulator.module);
+        tracer.enableDetailedTrace();
 
         // 策略1：正常初始化流程
         System.out.println("\n========== 第1步：初始化环境 ==========");
-        String initResult = emulator.call_doCommandNative_init();
+        String initResult = ksEmulator.call_doCommandNative_init();
         System.out.println("[主流程] 初始化结果: " + initResult);
 
         if (initResult == null || !initResult.equals("1")) {
@@ -640,7 +715,7 @@ public class KSEmulator extends AbstractJni {
 
         // 策略2：尝试直接加密（全局标志位已在构造函数中设置）
         System.out.println("\n========== 第2步：加密数据 ==========");
-        String encResult = emulator.encryptEncData();
+        String encResult = ksEmulator.encryptEncData();
 
         if (encResult != null) {
             System.out.println("[主流程] ✓ 加密成功");
@@ -658,47 +733,25 @@ public class KSEmulator extends AbstractJni {
             System.out.println("[主流程] ❌ 加密失败");
         }
 
+        // 🔍 打印详细的执行跟踪报告
+        tracer.printReport();
+
         System.out.println("\n========== 执行完成 ==========\n");
     }
 
 
     /**
-     * 在加密调用前强制禁用反调试检查
+     * ⚠️ 已废弃 - 根据ExecutionTracer分析,这个方法会导致加密失败!
      *
-     * 问题分析：
-     * 通过IDA Pro反编译doCommandNative函数发现，在地址0x42c00（第2429-2432行）
-     * 有关键的反调试检查逻辑：
+     * 问题: 设置 dword_70C10 = -1 会导致在 0x42e08 处的opcode检查失败
+     * 真机数据显示这两个变量应该保持为 0 (初始值)
      *
-     * ```c
-     * if ( v141 < 10 || (v143 & 1) == 0 )
-     *     break;  // 进入正常加密流程
-     * ```
-     *
-     * 其中：
-     * - v141 = dword_70C10（第一个反调试标志变量）
-     * - v143 = (dword_70C14 - 1) * dword_70C14（第二个反调试标志变量的计算式）
-     *
-     * 反调试触发条件：
-     * - 条件A：dword_70C10 >= 10
-     * - 条件B：((dword_70C14-1) * dword_70C14) & 1 != 0
-     * - 如果 A && B 都为true，代码会进入错误分支，最终返回0（加密失败）
-     *
-     * 解决方案：
-     * 我们需要让至少一个条件为false，这里选择让两个条件都为false：
-     * 1. 设置 dword_70C10 = -1 (0xFFFFFFFF)
-     *    - 作为有符号int，-1 < 10，使条件A为false
-     * 2. 设置 dword_70C14 = -1 (0xFFFFFFFF)
-     *    - 计算：((-1) - 1) * (-1) = (-2) * (-1) = 2
-     *    - 检查：2 & 1 = 0，使条件B为false
-     *
-     * 这样反调试检查就会通过，代码继续执行加密逻辑。
-     *
-     * 调用时机：
-     * 必须在每次调用doCommandNative进行加密操作之前调用此方法。
+     * 解决方案: 不调用此方法,保持变量为初始值 0
      */
-    private void disableAntiDebugBeforeEncryption() {
+    @Deprecated
+    private void disableAntiDebugBeforeEncryption_DEPRECATED() {
         Backend backend = emulator.getBackend();
-        System.out.println("\n[反调试绕过] 开始设置反调试变量...");
+        System.out.println("\n[反调试绕过] ⚠️ 此方法已废弃,不应被调用!");
 
         // 定义反调试变量的地址（相对于SO基址的偏移量）
         final long DWORD_70C10_OFFSET = 0x70C10;  // 第一个反调试标志
@@ -729,6 +782,7 @@ public class KSEmulator extends AbstractJni {
             System.out.println("[反调试绕过]   - dword_70C14 = " + original_70C14 +
                              " (0x" + Integer.toHexString(original_70C14) + ")");
 
+            // ❌ 错误的做法 - 不要设置为-1!
             // 设置 dword_70C10 = -1 (0xFFFFFFFF)
             // -1的小端序表示：FF FF FF FF
             byte[] newValue70C10 = new byte[]{(byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF};
@@ -794,8 +848,10 @@ public class KSEmulator extends AbstractJni {
         // 🔍 启用详细的JNI调用跟踪
         setupDetailedJNITrace();
 
-        // ⚠️ 关键：强制禁用反调试检查（在加密调用前）
-        disableAntiDebugBeforeEncryption();
+        // ✅ 修复：不再调用disableAntiDebugBeforeEncryption()
+        // 根据ExecutionTracer分析,设置这两个变量为-1会导致opcode检查失败
+        // 应该保持为初始值0,与真机一致
+        System.out.println("\n[反调试变量] 保持初始值 0 (与真机一致)");
 
         // 🔍 在加密前验证全局标志位是否正确设置
         Backend backend = emulator.getBackend();
@@ -832,21 +888,16 @@ public class KSEmulator extends AbstractJni {
         }
         System.out.println();
 
-        // ⚠️ 重要发现: trace log 显示在 0x042e08 处有强制检查 (opcode | 8) == 0x28AE
-        // 如果不满足,会跳转到 0x43368 失败路径
-        // 这不是可选分支,而是必须满足的条件!
+        // ✅ 修复：根据ExecutionTracer和汇编分析,opcode必须满足:
+        // (opcode | 8) == 0x28AE  或  opcode == 0x28A6
         //
-        // 满足条件的 opcode: (opcode | 8) == 0x28AE (10414)
-        // - 10406: (10406 | 8) = 0x28A6 | 8 = 0x28AE ✅
-        // - 10414: (10414 | 8) = 0x28AE | 8 = 0x28AE ✅
+        // 计算：
+        // - 10406 (0x28A6): 0x28A6 | 8 = 0x28AE ✅ 完美匹配!
+        // - 10414 (0x28AE): 0x28AE | 8 = 0x28AE ✅ 也匹配
+        // - 10400 (0x28A0): 0x28A0 | 8 = 0x28A8 ❌ 不匹配 (之前失败的原因)
         //
-        // 真机log可能是:
-        // 1. 不同版本的SO库
-        // 2. 十六进制显示 (0x28A0 = 10400十进制)
-        // 3. 或者有其他绕过机制
-        //
-        // 现在先用 10406 测试,看能否通过 (opcode | 8) 检查
-        int opcode = 10406;  // 🔧 临时修改: 测试能否通过 (opcode|8)==0x28AE 检查
+        // 选择 10406 因为它在汇编代码中有明确的比较分支
+        int opcode = 10406;  // ✅ 修复：使用正确的opcode值
         System.out.println("[encryptEncData] opcode: " + opcode);
         System.out.println("[encryptEncData] 使用共享Context: " + context);
 
@@ -1171,12 +1222,12 @@ public class KSEmulator extends AbstractJni {
                 int code = vaList.getIntArg(0);
                 String message = vaList.getObjectArg(1).getValue().toString();
 
-                // ⭐ 签名绕过：拦截所有签名验证相关的错误报告
+                // ⭐ 临时禁用签名错误拦截，查看完整错误信息以便诊断
                 // 错误码说明：
                 // - 0x111b7 (70071): APK签名验证失败 - ZIP读取/解析错误
                 // - 0x111bc (70076): 证书链验证失败
                 // - 0x11180 (70016): 包名/签名不在白名单
-                if (code == 0x111b7 || code == 0x111bc || code == 0x11180) {
+                if (false && (code == 0x111b7 || code == 0x111bc || code == 0x11180)) {
                     System.out.println("\n[🔧 签名绕过] 拦截签名验证错误报告");
                     System.out.println("[签名绕过]   错误码: 0x" + Integer.toHexString(code));
                     System.out.println("[签名绕过]   消息: " + message);
@@ -1190,6 +1241,20 @@ public class KSEmulator extends AbstractJni {
 
                 // 错误码解析
                 switch (code) {
+                    case 0x111b7: // 70071
+                        System.out.println("[❌ 分析] 0x111b7 (70071) = APK签名验证失败 - ZIP读取/解析错误");
+                        System.out.println("[❌ 提示] 可能原因:");
+                        System.out.println("[❌ 提示]   1. APK文件路径不正确或文件不存在");
+                        System.out.println("[❌ 提示]   2. APK文件无法打开或读取");
+                        System.out.println("[❌ 提示]   3. ZIP格式损坏或不完整");
+                        break;
+                    case 0x111bc: // 70076
+                        System.out.println("[❌ 分析] 0x111bc (70076) = 证书链验证失败");
+                        System.out.println("[❌ 提示] 可能原因:");
+                        System.out.println("[❌ 提示]   1. 签名证书格式不正确");
+                        System.out.println("[❌ 提示]   2. 证书过期或无效");
+                        System.out.println("[❌ 提示]   3. PackageInfo.signatures 未正确设置");
+                        break;
                     case 0x11180: // 70016
                         System.out.println("[❌ 分析] 70016 = 包名/签名不在白名单中");
                         System.out.println("[❌ 提示] 检查 Context.getPackageName() 返回值");
@@ -1273,14 +1338,22 @@ public class KSEmulator extends AbstractJni {
             // ===== Context 和 App 方法 =====
             case "com/yxcorp/gifshow/App->getPackageCodePath()Ljava/lang/String;": {
                 // 使用真实包名构造路径
-//                String packageName = vm.getPackageName();
-//                String path = "/data/app/~~tNMZVmV0fBgOq2lCiMwGRA==/" + packageName + "-JZD_aIoXsKoTPab3p20hBw==/base.apk";
-//                System.out.println("[🔍 getPackageCodePath] 返回: " + path);
-//                return new StringObject(vm, path);
+                String apkPath = "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/base.apk";
+                System.out.println("[🔍 getPackageCodePath] 返回虚拟路径: " + apkPath);
 
-                return new StringObject(vm, "/data/app/com.kuaishou.nebula-q14Fo0PSb77vTIOM1-iEqQ==/base.apk");
+                // ⚠️ 诊断：检查真实APK文件是否存在
+                File realApk = new File("unidbg-android/apks/ksjsb/ksjsb_13.8.40.10657.apk");
+                System.out.println("[🔍 APK诊断] 真实APK文件:");
+                System.out.println("[🔍 APK诊断]   路径: " + realApk.getAbsolutePath());
+                System.out.println("[🔍 APK诊断]   存在: " + realApk.exists());
+                if (realApk.exists()) {
+                    System.out.println("[🔍 APK诊断]   大小: " + realApk.length() + " 字节");
+                    System.out.println("[🔍 APK诊断]   可读: " + realApk.canRead());
+                } else {
+                    System.out.println("[🔍 APK诊断]   ❌ 文件不存在!");
+                }
 
-
+                return new StringObject(vm, apkPath);
             }
 
             case "com/yxcorp/gifshow/App->getPackageName()Ljava/lang/String;": {
@@ -1317,8 +1390,15 @@ public class KSEmulator extends AbstractJni {
             case "android/content/Context->getPackageCodePath()Ljava/lang/String;": {
                 // 使用真实包名构造路径
                 String packageName = vm.getPackageName();
-                String path = "/data/app/~~tNMZVmV0fBgOq2lCiMwGRA==/" + packageName + "-JZD_aIoXsKoTPab3p20hBw==/base.apk";
+                String path = "/data/app/~~En8y40Eyt_9SQIpY8tusUw==/com.kuaishou.nebula-94eN8Qsx7c5Ex2tlhTevMQ==/base.apk";
                 System.out.println("[🔍 Context.getPackageCodePath] 返回: " + path);
+
+                // ⚠️ 诊断：检查真实APK文件是否存在
+                File realApk = new File("unidbg-android/apks/ksjsb/ksjsb_13.8.40.10657.apk");
+                if (!realApk.exists()) {
+                    System.out.println("[🔍 Context.getPackageCodePath] ❌ 警告：真实APK文件不存在!");
+                }
+
                 return new StringObject(vm, path);
             }
 
