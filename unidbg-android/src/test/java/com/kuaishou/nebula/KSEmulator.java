@@ -154,12 +154,9 @@ public class KSEmulator extends AbstractJni {
                     System.out.println("[签名绕过]   当前 qword_70910: 0x" + Long.toHexString(currentFlag));
 
                     // 设置正确的标志位
-                    // 参考 0x40cd4.txt line 429: qword_70910 &= ~0x8000000000000uLL
-                    // 参考 0x40cd4.txt line 490: qword_70910 |= 0x1000000000000uLL
-                    // 参考 0x40cd4.txt line 427: qword_70910 |= 0x800000000000uLL
                     long newFlag = currentFlag;
                     newFlag &= ~0x8000000000000L;   // 清除失败标志
-                    newFlag |= 0x1800000000000L;    // 设置两个成功标志 (0x1000000000000 | 0x800000000000)
+                    newFlag |= 0x1800000000000L;    // 设置两个成功标志
 
                     byte[] newFlagBytes = new byte[8];
                     for (int i = 0; i < 8; i++) {
@@ -169,8 +166,43 @@ public class KSEmulator extends AbstractJni {
 
                     System.out.println("[签名绕过]   修复后 qword_70910: 0x" + Long.toHexString(newFlag));
 
-                    // 3. 直接跳转到返回地址，跳过整个函数
+                    // 🔧 关键修复：修正调用者栈上的[sp+0x30]值
+                    // sub_3E5C0如果失败会设置[sp+0x30]为-1，我们跳过了它，需要手动设置正确值
+                    long sp = backend.reg_read(Arm64Const.UC_ARM64_REG_SP).longValue();
+
+                    // 注意：这里的SP是sub_3E5C0的栈帧，调用者的SP在外层
+                    // 我们需要修改调用者栈帧中的[sp+0x30]
+                    // 根据ARM64调用约定，被调用函数的SP = 调用者SP - 栈帧大小
+                    // 从反汇编看，sub_3E5C0的栈帧很小，调用者的值应该在返回后的SP+0x30
+
+                    // 读取LR（返回地址）来确定调用位置
                     long lr = backend.reg_read(Arm64Const.UC_ARM64_REG_LR).longValue();
+
+                    // 🎯 策略：在返回后，调用者会继续执行，此时它的SP已经恢复
+                    // 我们直接修改当前SP附近的栈空间，尝试覆盖可能的[sp+0x30]位置
+                    // 根据日志，0x42dfc处读取的是sp=0xe4fff470，所以[sp+0x30] = 0xe4fff4a0
+
+                    // 由于我们不知道确切的调用者SP，使用一个启发式方法：
+                    // sub_3E5C0被调用时，通常调用者SP = 当前SP + sub_3E5C0的栈帧大小
+                    // 从反汇编可以看出sub_3E5C0的栈帧不大，假设约0x20-0x40字节
+
+                    // 尝试修正多个可能的位置
+                    for (int offset = 0x20; offset <= 0x60; offset += 0x10) {
+                        long targetAddr = sp + offset + 0x30;
+                        byte[] stackValue = backend.mem_read(targetAddr, 4);
+                        java.nio.ByteBuffer stackBuf = java.nio.ByteBuffer.wrap(stackValue);
+                        stackBuf.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                        int currentValue = stackBuf.getInt();
+
+                        // 如果发现值是-1或看起来不对，修正为4
+                        if (currentValue == -1 || currentValue == 0 || (currentValue & 0xFFFFFF00) != 0) {
+                            byte[] correctValue = new byte[]{4, 0, 0, 0};
+                            backend.mem_write(targetAddr, correctValue);
+                            System.out.println("[签名绕过]   修正栈值 [SP+0x" + Integer.toHexString(offset) + "+0x30] = 4 (was " + currentValue + ")");
+                        }
+                    }
+
+                    // 3. 跳转到返回地址
                     backend.reg_write(Arm64Const.UC_ARM64_REG_PC, lr);
 
                     System.out.println("[签名绕过]   ✅ 已跳过所有验证，返回成功 (LR=0x" + Long.toHexString(lr) + ")");
@@ -186,62 +218,13 @@ public class KSEmulator extends AbstractJni {
             public void detach() {}
         }, SUB_3E5C0_ADDR, SUB_3E5C0_ADDR + 4, null);  // 只Hook入口的4字节
 
-        // 🔧 新增：修复签名验证失败的副作用
-        // 问题：签名验证失败后，栈偏移 [sp+0x30] 被设置为 -1 (0xffffffff)
-        // 在 0x042dfc 处读取这个值会导致 opcode 检查失败
-        // 解决：在读取之前修复这个值为 0
-        final long STACK_FIX_ADDR = module.base + 0x042dfc;
-        System.out.println("[栈修复] Hook 0x042dfc (修复签名验证失败的副作用)");
-
-        backend.hook_add_new(new CodeHook() {
-            @Override
-            public void hook(Backend backend, long address, int size, Object user) {
-                // 读取SP寄存器
-                long sp = backend.reg_read(Arm64Const.UC_ARM64_REG_SP).longValue();
-
-                // 读取 [sp+0x30] 的当前值
-                byte[] currentBytes = backend.mem_read(sp + 0x30, 4);
-                java.nio.ByteBuffer buf = java.nio.ByteBuffer.wrap(currentBytes);
-                buf.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-                int currentValue = buf.getInt();
-
-                System.out.println(String.format(
-                    "\n[栈修复] 0x042dfc: [sp+0x30] 当前值 = 0x%08x (%d)",
-                    currentValue, currentValue
-                ));
-
-                // 如果值是 -1 (0xffffffff)，说明签名验证失败，需要修复
-                if (currentValue == -1 || currentValue == 0xffffffff) {
-                    System.out.println("[栈修复]   ⚠️ 检测到签名验证失败标志 (0xffffffff)");
-                    System.out.println("[栈修复]   🔧 修复为 0 (表示成功)");
-
-                    // 写入 0 (表示没有错误)
-                    byte[] newValue = new byte[]{0, 0, 0, 0};
-                    backend.mem_write(sp + 0x30, newValue);
-
-                    // 验证写入
-                    byte[] verifyBytes = backend.mem_read(sp + 0x30, 4);
-                    java.nio.ByteBuffer verifyBuf = java.nio.ByteBuffer.wrap(verifyBytes);
-                    verifyBuf.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-                    int verifyValue = verifyBuf.getInt();
-
-                    System.out.println(String.format(
-                        "[栈修复]   ✅ 修复后值 = 0x%08x (%d)",
-                        verifyValue, verifyValue
-                    ));
-                } else {
-                    System.out.println("[栈修复]   ✓ 值正常，无需修复");
-                }
-            }
-
-            @Override
-            public void onAttach(UnHook unHook) {
-                System.out.println("[栈修复] ✓ Hook 已激活");
-            }
-
-            @Override
-            public void detach() {}
-        }, STACK_FIX_ADDR, STACK_FIX_ADDR + 4, null);
+        // 🔧 终极策略：直接在sub_3E5C0的Hook中修正[sp+0x30]的值
+        // 由于sub_3E5C0在初始化和加密流程中都被调用，我们在这里统一修正栈值
+        //
+        // 问题根源：
+        // sub_3E5C0执行失败会在栈上设置错误标志（[sp+0x30] = -1）
+        // 但我们已经跳过了sub_3E5C0，所以栈上的值是未初始化的随机值
+        // 需要在跳过验证后，手动设置正确的值
 
         System.out.println("[签名绕过] ✓ Hook设置完成\n");
     }
@@ -470,12 +453,18 @@ public class KSEmulator extends AbstractJni {
     public static class BiliIOResolver implements IOResolver<AndroidFileIO> {
         @Override
         public FileResult<AndroidFileIO> resolve(Emulator<AndroidFileIO> emulator, String pathname, int oflags) {
-            // 打印所有文件访问请求，无论是否处理
+            // 过滤掉无效路径（内存地址或乱码）
+            if (pathname == null || pathname.length() < 3 || pathname.matches(".*[\\x00-\\x1F\\x7F-\\x9F].*")) {
+                // 忽略无效路径，不打印日志
+                return null;
+            }
+
+            // 打印所有文件访问请求
             System.out.println("[IOResolver] 文件打开请求: " + pathname + " (flags=0x" + Integer.toHexString(oflags) + ")");
 
             // ⭐ 关键修复：拦截APK路径访问，返回真实的APK文件
             // SO库会尝试打开getPackageCodePath()返回的路径
-            if (pathname != null && pathname.contains("base.apk")) {
+            if (pathname.contains("base.apk")) {
                 File realApk = new File("unidbg-android/apks/ksjsb/ksjsb_13.8.40.10657.apk");
                 System.out.println("[IOResolver] 🔍 APK访问请求:");
                 System.out.println("[IOResolver]   请求路径: " + pathname);
@@ -488,7 +477,8 @@ public class KSEmulator extends AbstractJni {
 
                     try {
                         System.out.println("[IOResolver] ✅ 返回真实APK文件");
-                        return FileResult.<AndroidFileIO>success(new SimpleFileIO(oflags, realApk, pathname));
+                        // 使用 O_RDONLY 标志创建 SimpleFileIO
+                        return FileResult.<AndroidFileIO>success(new SimpleFileIO(0 /* O_RDONLY */, realApk, pathname));
                     } catch (Exception e) {
                         System.out.println("[IOResolver] ❌ 打开APK文件失败: " + e.getMessage());
                         e.printStackTrace();
@@ -721,13 +711,30 @@ public class KSEmulator extends AbstractJni {
             System.out.println("[主流程] ✓ 加密成功");
             System.out.println("[主流程] 加密结果长度: " + encResult.length());
 
+            // 🔧 转换为Base64
+            try {
+                byte[] encBytes = hexToBytes(encResult);
+                String base64Result = java.util.Base64.getEncoder().encodeToString(encBytes);
+                System.out.println("\n[Base64结果] 加密数据的Base64编码:");
+                System.out.println(base64Result);
+                System.out.println("\n[Base64结果] Base64长度: " + base64Result.length());
+            } catch (Exception e) {
+                System.out.println("[Base64转换] ❌ 转换失败: " + e.getMessage());
+                e.printStackTrace();
+            }
+
             // 验证结果
             if (ENC_DATA_EXPECTED_HEX.equalsIgnoreCase(encResult)) {
-                System.out.println("[主流程] 🎉 加密结果完全匹配！");
+                System.out.println("\n[主流程] 🎉 加密结果完全匹配！");
             } else {
-                System.out.println("[主流程] ⚠️ 加密结果不匹配");
+                System.out.println("\n[主流程] ⚠️ 加密结果不匹配");
                 System.out.println("[主流程] 期望长度: " + ENC_DATA_EXPECTED_HEX.length());
                 System.out.println("[主流程] 实际长度: " + encResult.length());
+
+                // 显示前后差异
+                int previewLen = Math.min(100, Math.min(encResult.length(), ENC_DATA_EXPECTED_HEX.length()));
+                System.out.println("[主流程] 实际结果前100字符: " + encResult.substring(0, previewLen));
+                System.out.println("[主流程] 期望结果前100字符: " + ENC_DATA_EXPECTED_HEX.substring(0, previewLen));
             }
         } else {
             System.out.println("[主流程] ❌ 加密失败");
@@ -888,16 +895,7 @@ public class KSEmulator extends AbstractJni {
         }
         System.out.println();
 
-        // ✅ 修复：根据ExecutionTracer和汇编分析,opcode必须满足:
-        // (opcode | 8) == 0x28AE  或  opcode == 0x28A6
-        //
-        // 计算：
-        // - 10406 (0x28A6): 0x28A6 | 8 = 0x28AE ✅ 完美匹配!
-        // - 10414 (0x28AE): 0x28AE | 8 = 0x28AE ✅ 也匹配
-        // - 10400 (0x28A0): 0x28A0 | 8 = 0x28A8 ❌ 不匹配 (之前失败的原因)
-        //
-        // 选择 10406 因为它在汇编代码中有明确的比较分支
-        int opcode = 10406;  // ✅ 修复：使用正确的opcode值
+        int opcode = 10400;  // ✅ 修复：使用正确的opcode值
         System.out.println("[encryptEncData] opcode: " + opcode);
         System.out.println("[encryptEncData] 使用共享Context: " + context);
 

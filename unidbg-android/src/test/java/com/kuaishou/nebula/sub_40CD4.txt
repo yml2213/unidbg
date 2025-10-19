@@ -1,3 +1,6 @@
+// doCommandNative - 主调度函数。处理多个opcode命令:
+// - 10412: 初始化命令
+// - 10400: 加密命令 (当前失败于此)
 __int64 __fastcall sub_40CD4(__int64 a1, __int64 a2, unsigned int a3, __int64 a4)
 {
   __int64 v4; // x29
@@ -6,8 +9,8 @@ __int64 __fastcall sub_40CD4(__int64 a1, __int64 a2, unsigned int a3, __int64 a4
   unsigned int v10; // w27
   int v11; // w24
   char *v12; // x27
-  void *v13; // x22
-  void *v14; // x22
+  char *v13; // x22
+  char *v14; // x22
   __int64 v15; // x24
   char *v16; // x21
   __int64 v17; // x0
@@ -19,8 +22,8 @@ __int64 __fastcall sub_40CD4(__int64 a1, __int64 a2, unsigned int a3, __int64 a4
   char v23; // w0
   int v24; // w8
   int i; // w9
-  void *v26; // x25
-  void *v27; // x25
+  char *v26; // x25
+  char *v27; // x25
   int v28; // w8
   int j; // w9
   __int64 v31; // x0
@@ -472,8 +475,8 @@ LABEL_52:
         {
           WORD2(v380) = -1424;
           LODWORD(v380) = 839400965;
-          v27 = (void *)sub_3C54C(&v380);
-          sub_3B350(a1, 70002, v27);
+          v27 = (char *)sub_3C54C(&v380);
+          sub_3B350(a1, 0x11172u, v27);
           if ( v27 )
             sub_3C614(v27);
           v28 = dword_70C10;
@@ -483,8 +486,8 @@ LABEL_52:
             break;
           WORD2(v380) = -1424;
           LODWORD(v380) = 839400965;
-          v26 = (void *)sub_3C54C(&v380);
-          sub_3B350(a1, 70002, v26);
+          v26 = (char *)sub_3C54C(&v380);
+          sub_3B350(a1, 0x11172u, v26);
           if ( v26 )
             sub_3C614(v26);
         }
@@ -504,19 +507,17 @@ LABEL_55:
       sub_3E5C0(a1, v19);
     }
     if ( (v32 & 1) != 0 )
-    {                                           // 检查全局标志位：qword_70910 & 0x1800000000000LL
-                                                // 这个标志在代码的setGlobalFlagsEarly()中被设置
-                                                // 如果不为0才能继续执行加密操作
+    {
       if ( (qword_70910 & 0x1800000000000LL) == 0 )
       {
-        v32 = sub_3B350(a1, 70012, "70012");
+        v32 = sub_3B350(a1, 0x1117Cu, "70012");
         v28 = dword_70C10;
         for ( j = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
               (dword_70C10 & 0x80000000) == 0 && j < 0;
               j = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773) )
         {
-          sub_3B350(a1, 70012, "70012");
-          v32 = sub_3B350(a1, 70012, "70012");
+          sub_3B350(a1, 0x1117Cu, "70012");
+          v32 = sub_3B350(a1, 0x1117Cu, "70012");
           v28 = dword_70C10;
         }
       }
@@ -525,32 +526,30 @@ LABEL_55:
         while ( 1 )
           ;
       }
-      if ( (byte_7091F & 0x20) == 0 )           // 检查byte_7091F的bit 5 (0x20)
-                                                // 这个标志控制是否启用某些安全特性
-                                                // 如果未设置会报错70117并返回0
+      if ( (byte_7091F & 0x20) == 0 )
       {
         if ( v28 >= 10 && (j & 1) != 0 )
           goto LABEL_101;
         while ( 1 )
         {
-          v32 = sub_3B350(a1, 70117, &unk_59396);
+          v32 = sub_3B350(a1, 0x111E5u, (const char *)&unk_59396);
           v28 = dword_70C10;
           j = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
           if ( dword_70C10 < 10 || (j & 1) == 0 )
             break;
 LABEL_101:
-          sub_3B350(a1, 70117, &unk_59396);
+          sub_3B350(a1, 0x111E5u, (const char *)&unk_59396);
         }
       }
     }
     else
     {
-      v32 = sub_3B350(a1, 70014, &unk_59396);
+      v32 = sub_3B350(a1, 0x1117Eu, (const char *)&unk_59396);
       v28 = dword_70C10;
       for ( j = *((_DWORD *)v9 + 773); dword_70C10 >= 10 && (((j - 1) * j) & 1) != 0; j = *((_DWORD *)v9 + 773) )
       {
-        sub_3B350(a1, 70014, &unk_59396);
-        v32 = sub_3B350(a1, 70014, &unk_59396);
+        sub_3B350(a1, 0x1117Eu, (const char *)&unk_59396);
+        v32 = sub_3B350(a1, 0x1117Eu, (const char *)&unk_59396);
         v28 = dword_70C10;
       }
       LOBYTE(j) = (j - 1) * j;
@@ -577,14 +576,14 @@ LABEL_81:
         goto LABEL_104;
       while ( 1 )
       {
-        sub_3B350(a1, 70017, &unk_59396);
+        sub_3B350(a1, 0x11181u, (const char *)&unk_59396);
         v28 = dword_70C10;
         v15 = 0;
         j = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
         if ( dword_70C10 < 0 || (j & 0x80000000) == 0 )
           break;
 LABEL_104:
-        sub_3B350(a1, 70017, &unk_59396);
+        sub_3B350(a1, 0x11181u, (const char *)&unk_59396);
       }
       goto LABEL_225;
     }
@@ -603,7 +602,7 @@ LABEL_104:
       while ( 1 )
       {
         (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
-        sub_3B350(a1, 70018, &unk_59396);
+        sub_3B350(a1, 0x11182u, (const char *)&unk_59396);
         v37 = dword_70C10;
         v38 = (((unsigned __int8)*((_DWORD *)v9 + 773) - 1) * (unsigned __int8)*((_DWORD *)v9 + 773)) & 1;
         if ( dword_70C10 < 10
@@ -612,7 +611,7 @@ LABEL_104:
           break;
         }
         (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
-        sub_3B350(a1, 70018, &unk_59396);
+        sub_3B350(a1, 0x11182u, (const char *)&unk_59396);
       }
       v15 = 0;
       v39 = v34;
@@ -737,7 +736,7 @@ LABEL_112:
         goto LABEL_255;
       while ( 1 )
       {
-        sub_3B350(a1, 70021, &unk_59396);
+        sub_3B350(a1, 0x11185u, (const char *)&unk_59396);
         v64 = dword_70C10;
         v39 = 0;
         v15 = 0;
@@ -745,7 +744,7 @@ LABEL_112:
         if ( dword_70C10 < 10 || (v65 & 1) == 0 )
           break;
 LABEL_255:
-        sub_3B350(a1, 70021, &unk_59396);
+        sub_3B350(a1, 0x11185u, (const char *)&unk_59396);
       }
       goto LABEL_208;
     }
@@ -771,13 +770,13 @@ LABEL_124:
         goto LABEL_181;
       while ( 1 )
       {
-        sub_3B350(a1, 70020, &unk_59396);
+        sub_3B350(a1, 0x11184u, (const char *)&unk_59396);
         v60 = dword_70C10;
         v63 = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
         if ( dword_70C10 < 0 || (v63 & 0x80000000) == 0 )
           break;
 LABEL_181:
-        sub_3B350(a1, 70020, &unk_59396);
+        sub_3B350(a1, 0x11184u, (const char *)&unk_59396);
       }
       v62 = v63 & 1;
       v344 = 1;
@@ -1222,12 +1221,12 @@ LABEL_360:
         {
           for ( k = a1; ; k = a1 )
           {
-            sub_3B350(k, 70081, &unk_59396);
+            sub_3B350(k, 0x111C1u, (const char *)&unk_59396);
             v124 = 0;
             v125 = 1;
             if ( dword_70C10 < 0 || (((*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773)) & 0x80000000) == 0 )
               break;
-            sub_3B350(a1, 70081, &unk_59396);
+            sub_3B350(a1, 0x111C1u, (const char *)&unk_59396);
           }
         }
         v109 = v346;
@@ -1344,7 +1343,7 @@ LABEL_396:
         if ( !v148 || v149 == 1 )
         {
           (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
-          sub_3B350(a1, 70023, &unk_59396);
+          sub_3B350(a1, 0x11187u, (const char *)&unk_59396);
           v154 = dword_70C10;
           v15 = 0;
           for ( m = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
@@ -1352,9 +1351,9 @@ LABEL_396:
                 m = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773) )
           {
             (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
-            sub_3B350(a1, 70023, &unk_59396);
+            sub_3B350(a1, 0x11187u, (const char *)&unk_59396);
             (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
-            sub_3B350(a1, 70023, &unk_59396);
+            sub_3B350(a1, 0x11187u, (const char *)&unk_59396);
             v154 = dword_70C10;
             v15 = 0;
           }
@@ -1701,7 +1700,7 @@ LABEL_550:
                 v209 = (unsigned __int64)LOBYTE(v378.tv_sec) >> 1;
               if ( !v209 )
               {
-                v186 = (_QWORD *)sub_3B350(a1, 10001201, &unk_59396);
+                v186 = (_QWORD *)sub_3B350(a1, 0x989B31u, (const char *)&unk_59396);
                 v187 = dword_70C10;
                 v189 = ((*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773)) & 1;
                 if ( dword_70C10 >= 10 )
@@ -1710,8 +1709,8 @@ LABEL_550:
                   {
                     do
                     {
-                      sub_3B350(a1, 10001201, &unk_59396);
-                      v186 = (_QWORD *)sub_3B350(a1, 10001201, &unk_59396);
+                      sub_3B350(a1, 0x989B31u, (const char *)&unk_59396);
+                      v186 = (_QWORD *)sub_3B350(a1, 0x989B31u, (const char *)&unk_59396);
                       v187 = dword_70C10;
                       v189 = ((*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773)) & 1;
                     }
@@ -1960,7 +1959,7 @@ LABEL_880:
                     while ( 1 )
                     {
                       free(v317);
-                      sub_3B350(a1, 10001203, &unk_59396);
+                      sub_3B350(a1, 0x989B33u, (const char *)&unk_59396);
                       v325 = (*(__int64 (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
                       v187 = dword_70C10;
                       v15 = v325;
@@ -1969,7 +1968,7 @@ LABEL_880:
                         break;
 LABEL_972:
                       free(v317);
-                      sub_3B350(a1, 10001203, &unk_59396);
+                      sub_3B350(a1, 0x989B33u, (const char *)&unk_59396);
                       (*(void (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
                     }
                   }
@@ -2002,7 +2001,7 @@ LABEL_972:
                     goto LABEL_979;
                   while ( 1 )
                   {
-                    sub_3B350(a1, 10001204, &unk_59396);
+                    sub_3B350(a1, 0x989B34u, (const char *)&unk_59396);
                     v326 = (*(__int64 (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
                     v187 = dword_70C10;
                     v15 = v326;
@@ -2010,7 +2009,7 @@ LABEL_972:
                     if ( dword_70C10 < 10 || (v188 & 1) == 0 )
                       break;
 LABEL_979:
-                    sub_3B350(a1, 10001204, &unk_59396);
+                    sub_3B350(a1, 0x989B34u, (const char *)&unk_59396);
                     (*(void (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
                   }
                 }
@@ -2021,14 +2020,14 @@ LABEL_979:
               {
                 while ( 1 )
                 {
-                  sub_3B350(a1, 10001202, &unk_59396);
+                  sub_3B350(a1, 0x989B32u, (const char *)&unk_59396);
                   v324 = (*(__int64 (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
                   v187 = dword_70C10;
                   v15 = v324;
                   v188 = (*((_DWORD *)v178 + 773) - 1) * *((_DWORD *)v178 + 773);
                   if ( dword_70C10 < 0 || (v188 & 0x80000000) == 0 )
                     break;
-                  sub_3B350(a1, 10001202, &unk_59396);
+                  sub_3B350(a1, 0x989B32u, (const char *)&unk_59396);
                   (*(void (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
                 }
               }
@@ -2416,8 +2415,7 @@ LABEL_870:
           0,
           v347,
           v138);
-        v139 = operator new(0x20u);             // 关键点：GetByteArrayRegion读取加密数据，成功读取1801字节
-                                                // 之后检查签名、环境等条件，如果失败会跳转到返回0的路径
+        v139 = operator new(0x20u);
         v140 = *((_DWORD *)v9 + 773);
         v141 = dword_70C10;
         v142 = (_QWORD *)v139;
@@ -2427,10 +2425,7 @@ LABEL_870:
         *(_QWORD *)v139 = v138;
         *(_DWORD *)(v139 + 8) = v347;
         if ( v141 < 10 || (v143 & 1) == 0 )
-          break;                                // 条件判断：v142 < 10 || (v144 & 1) == 0
-                                                // v142 = dword_70C10 (反调试标志)
-                                                // v144 = (dword_70C14 - 1) * dword_70C14
-                                                // 如果反调试检查失败，会进入错误路径
+          break;
         v132 = (*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1384LL))(a1, a4, 0);
         v133 = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 1368LL))(a1, v132);
         v134 = calloc((int)v133 + 1LL, 1u);
@@ -2485,7 +2480,7 @@ LABEL_705:
             *((_DWORD *)v142 + 6) = v238;
             if ( v237 )
               (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v237);
-
+          }
 LABEL_439:
           if ( v141 >= 10 && v144 )
           {
@@ -2607,7 +2602,7 @@ LABEL_723:
                       while ( 1 )
                       {
                         (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
-                        sub_3B350(a1, 70022, &unk_59396);
+                        sub_3B350(a1, 0x11186u, (const char *)&unk_59396);
                         v249 = dword_70C10;
                         v15 = 0;
                         v250 = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
@@ -2615,7 +2610,7 @@ LABEL_723:
                           break;
 LABEL_745:
                         (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
-                        sub_3B350(a1, 70022, &unk_59396);
+                        sub_3B350(a1, 0x11186u, (const char *)&unk_59396);
                       }
                     }
                     while ( v249 >= 0 && v250 < 0 )
@@ -2835,7 +2830,7 @@ LABEL_152:
     }
     if ( v55 )
     {
-      sub_3B350(a1, 70019, &unk_59396);
+      sub_3B350(a1, 0x11183u, (const char *)&unk_59396);
       v56 = dword_70C10;
       v57 = (dword_70C14 - 1) * dword_70C14;
       v344 = 1;
@@ -2846,8 +2841,8 @@ LABEL_152:
         {
           if ( (v57 & 0x80000000) == 0 )
             break;
-          sub_3B350(a1, 70019, &unk_59396);
-          sub_3B350(a1, 70019, &unk_59396);
+          sub_3B350(a1, 0x11183u, (const char *)&unk_59396);
+          sub_3B350(a1, 0x11183u, (const char *)&unk_59396);
           v56 = dword_70C10;
           v57 = (dword_70C14 - 1) * dword_70C14;
           v344 = 1;
@@ -2900,8 +2895,8 @@ LABEL_170:
     nullsub_5(111);
     WORD2(v380) = -656;
     LODWORD(v380) = 839400965;
-    v14 = (void *)sub_3C54C(&v380);
-    sub_3B350(a1, 70001, v14);
+    v14 = (char *)sub_3C54C(&v380);
+    sub_3B350(a1, 0x11171u, v14);
     if ( v14 )
       sub_3C614(v14);
     v15 = 0;
@@ -2910,8 +2905,8 @@ LABEL_170:
     nullsub_5(111);
     WORD2(v380) = -656;
     LODWORD(v380) = 839400965;
-    v13 = (void *)sub_3C54C(&v380);
-    sub_3B350(a1, 70001, v13);
+    v13 = (char *)sub_3C54C(&v380);
+    sub_3B350(a1, 0x11171u, v13);
     if ( v13 )
       sub_3C614(v13);
   }

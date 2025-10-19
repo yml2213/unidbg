@@ -1,0 +1,1610 @@
+// =====================================================
+// 函数名: sub_40CD4 (doCommandNative)
+// 功能: 主命令调度函数,处理多个加密相关操作码
+// 参数:
+//   a1: JNIEnv对象
+//   a2: jobject
+//   a3: opcode命令码 (10400=加密, 10412=初始化, 10411=?, 10405=?, 10406=?, 10414=?)
+//   a4: 参数数组
+// =====================================================
+
+__int64 __fastcall sub_40CD4(__int64 a1, __int64 a2, unsigned int a3, __int64 a4)
+{
+  // =================== 变量声明区 ===================
+  __int64 v4; // x29 - 帧指针
+  __int64 v5; // x30 - 链接寄存器
+  char *v9; // x20 - 指向全局数据区 byte_70000
+  unsigned int v10; // w27 - 随机数
+  int v11; // w24 - 参数数组长度
+
+  // ... [省略大量局部变量声明] ...
+
+  unsigned int v348; // [xsp+80h] [xbp-220h] - 保存命令码 a3
+
+  // =================== 初始化检查 ===================
+  v383 = v4;
+  v384 = v5;
+  _ReadStatusReg(TPIDR_EL0); // 读取线程本地存储
+
+  v9 = &byte_70000; // 指向全局配置区
+
+  // 混淆检查循环 - 检查dword_70C10和dword_70C14的值
+  if ( (dword_70C10 & 0x80000000) == 0 && (dword_70C14 - 1) * dword_70C14 < 0 )
+    goto LABEL_5;
+
+  while ( 1 )
+  {
+    v10 = rand(); // 生成随机数
+    gettimeofday((struct timeval *)&v380, 0); // 获取当前时间
+    v368 = 0;
+    v369 = 0;
+    v367 = 0;
+    nullsub_5(123); // 空函数,可能用于混淆
+
+    // 调用虚函数表偏移1368获取参数数组长度
+    v11 = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 1368LL))(a1, a4);
+
+    if ( dword_70C10 < 0 || (((dword_70C14 - 1) * dword_70C14) & 0x80000000) == 0 )
+      break;
+
+LABEL_5:
+    rand();
+    gettimeofday((struct timeval *)&v380, 0);
+    v368 = 0;
+    v369 = 0;
+    v367 = 0;
+    nullsub_5(123);
+    (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 1368LL))(a1, a4);
+  }
+
+  // =================== 参数长度检查 ===================
+  // 如果参数数组长度 < 7,返回错误
+  if ( v11 >= 7 )
+  {
+    v348 = a3; // 保存命令码
+
+    // =================== 参数提取 ===================
+    while ( 1 )
+    {
+      nullsub_5(533);
+
+      // 获取参数[4] - 可能是某种标志或索引
+      v19 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 4);
+
+      // 获取参数[1] - 可能是输入字符串/数据
+      v20 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 1);
+      v353 = v20;
+
+      // 将参数[1]转换为C字符串
+      v21 = v20 ? (char *)(*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1352LL))(a1, v20, 0) : 0LL;
+
+      // 记录日志: 将v21字符串记录到qword_708E0
+      v328 = strlen(v21);
+      sub_D7A0((int)&qword_708E0, v21, v328);
+
+      v22 = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
+      if ( dword_70C10 < 10 || (v22 & 1) == 0 )
+        break;
+
+      // 混淆代码 - 重复相同操作
+      v16 = v9;
+      nullsub_5(533);
+      (*(void (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 4);
+      v17 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 1);
+      if ( v17 )
+        v18 = (char *)(*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1352LL))(a1, v17, 0);
+      else
+        v18 = 0;
+      v327 = strlen(v18);
+      sub_D7A0((int)&qword_708E0, v18, v327);
+      v9 = v16;
+    }
+
+    // =================== 命令码分支: 10412 (初始化) ===================
+    if ( v348 == 10412 )
+    {
+      nullsub_5(866);
+      // 调用初始化函数 sub_3F16C
+      v23 = sub_3F16C(a1, v19, v353);
+      v24 = dword_70C10;
+
+      // 混淆循环
+      for ( i = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
+            dword_70C10 >= 10 && (i & 1) != 0;
+            i = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773) )
+      {
+        nullsub_5(866);
+        sub_3F16C(a1, v19, v353);
+        nullsub_5(866);
+        v23 = sub_3F16C(a1, v19, v353);
+        v24 = dword_70C10;
+      }
+
+      if ( (v23 & 1) != 0 ) // 初始化成功
+      {
+        // ... 获取返回值
+        gettimeofday((struct timeval *)&v380, 0);
+        v15 = (*(__int64 (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_56499);
+        // ...
+      }
+      else // 初始化失败
+      {
+        // 返回错误码 70010
+        WORD2(v380) = -1424;
+        LODWORD(v380) = 839400965;
+        v27 = (char *)sub_3C54C(&v380);
+        sub_3B350(a1, 0x11172u, v27); // 返回错误 "70010"
+        if ( v27 )
+          sub_3C614(v27);
+        v15 = 0;
+      }
+      goto LABEL_225; // 跳转到清理和返回
+    }
+
+    // =================== 其他命令码 - 验证检查 ===================
+    // 调用 sub_3E5C0 进行验证
+    v32 = sub_3E5C0(a1, v19);
+    v28 = dword_70C10;
+    j = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
+
+    if ( (v32 & 1) != 0 ) // 验证成功
+    {
+      // 检查全局状态 qword_70910 的某些位
+      if ( (qword_70910 & 0x1800000000000LL) == 0 )
+      {
+        // 返回错误码 70012
+        v32 = sub_3B350(a1, 0x1117Cu, "70012");
+        // ...
+      }
+
+      // 检查 byte_7091F 的第6位
+      if ( (byte_7091F & 0x20) == 0 )
+      {
+        // 返回警告或提示
+        v32 = sub_3B350(a1, 0x111E5u, (const char *)&unk_59396);
+        // ...
+      }
+    }
+    else // 验证失败
+    {
+      // 返回错误
+      v32 = sub_3B350(a1, 0x1117Eu, (const char *)&unk_59396);
+
+      // 如果是命令码 10411,直接返回
+      if ( v348 != 10411 )
+      {
+        v15 = 0;
+        goto LABEL_225;
+      }
+    }
+
+    // =================== 获取全局配置对象 ===================
+    // 调用 sub_2B1C4 获取配置对象
+    v32 = sub_2B1C4(v32);
+
+    // 检查配置对象是否有效
+    if ( !*(_QWORD *)(*(_QWORD *)(v32 + 8) + 8LL) )
+    {
+      // 配置无效,返回错误 70017
+      sub_3B350(a1, 0x11181u, (const char *)&unk_59396);
+      v15 = 0;
+      goto LABEL_225;
+    }
+
+    // =================== 获取参数[0] - jobject ===================
+    v34 = (*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1384LL))(a1, a4, 0);
+
+    // 检查是否在主线程
+    v35 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)a1 + 1824LL))(a1);
+
+    if ( !v34 || v35 == 1 ) // 参数无效或在主线程
+    {
+      // 调用某个函数(可能是日志或状态更新)
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
+      // 返回错误 70018
+      sub_3B350(a1, 0x11182u, (const char *)&unk_59396);
+      v15 = 0;
+      v39 = v34;
+      // ... 清理资源
+      goto LABEL_225;
+    }
+
+    // =================== *** 核心处理流程开始 *** ===================
+
+    // 获取参数[1] - 输入数据字符串
+    v349 = v41;
+    gettimeofday((struct timeval *)&v380, 0);
+    v40 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 1);
+
+    if ( v34 == v40 )
+      v41 = v34;
+    else
+    {
+      v41 = v40;
+      if ( v34 )
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v34); // 释放旧引用
+    }
+
+    // 初始化字符串容器 v364
+    sub_C030((int)&v364, (char *)&unk_59396);
+
+    if ( !v41 ) // 参数[1]为空
+    {
+      // 返回错误 70021
+      sub_3B350(a1, 0x11185u, (const char *)&unk_59396);
+      v39 = 0;
+      v15 = 0;
+      goto LABEL_208;
+    }
+
+    // 将参数[1]转换为C字符串并存入v364
+    v45 = (char *)(*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1352LL))(a1, v349, 0);
+    v329 = strlen(v45);
+    sub_D7A0((int)&v364, v45, v329); // v364 现在包含输入数据
+
+    if ( !*v45 ) // 输入数据为空字符串
+    {
+      // 返回错误 70020
+      sub_3B350(a1, 0x11184u, (const char *)&unk_59396);
+      v344 = 1; // 标记错误
+      // ... 清理并返回
+      goto LABEL_183;
+    }
+
+    v344 = 0; // 无错误
+
+    // =================== 获取参数[2] - 加密选项? ===================
+    gettimeofday((struct timeval *)&v380, 0);
+    v69 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 2);
+    // ... 处理引用计数
+    v70 = v69;
+
+    if ( v70 ) // 参数[2]存在
+    {
+      // 调用 sub_386DC 处理参数[2]
+      v74 = sub_386DC(a1, v70);
+    }
+    else
+    {
+      v74 = -1;
+    }
+    v342 = v74; // 保存处理结果 (可能是加密模式或标志)
+
+    // =================== 获取参数[3] 和参数[6] ===================
+    v81 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 3);
+    v39 = v81;
+
+    v82 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 3);
+    v343 = sub_38474(a1, v82); // 转换参数[3]为字符
+
+    v345 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 6);
+    v83 = sub_38474(a1, v345);
+    v346 = v83; // 保存参数[6]的值
+
+    // 初始化 v362 (17字节缓冲区)
+    v362 = 0u;
+    v363 = 0;
+
+    // 调用 sub_2B1C4 获取某个配置
+    v84 = sub_2B1C4(v83);
+
+    // 如果配置中有数据,复制到v362
+    if ( *(_QWORD *)(v84 + 24) )
+    {
+      v92 = sub_2B1C4(v84);
+      v93 = *(__int128 **)(v92 + 24);
+      v94 = *((_BYTE *)v93 + 16);
+      v95 = *v93;
+      v363 = v94;
+      v362 = v95; // v362 现在包含17字节配置数据
+    }
+
+    // =================== 处理参数[6] = 1 的特殊情况 ===================
+    if ( v346 == 1 )
+    {
+      // 设置默认值
+      LOBYTE(v362) = 0;
+      DWORD1(v362) = -1312711011;
+      BYTE8(v362) = 2;
+    }
+
+    // 初始化 v376 字符串
+    v377 = 0;
+    v376 = (struct timeval)0LL;
+
+    // =================== *** 10400命令码流程 (加密) *** ===================
+    // 检查命令码是否在特定范围内: 10400-10418
+    // 并且 v346 == 1
+    if ( v348 - 10400 <= 0x12 && ((1 << (v348 + 96)) & 0x62061) != 0 && v346 == 1 )
+    {
+      // v348 = 10400 (0x28A0): 加密
+      // v348 = 10405 (0x28A5): 解密?
+      // v348 = 10406 (0x28A6): ?
+      // v348 = 10411 (0x28AB): ?
+      // v348 = 10414 (0x28AE): ?
+
+      // 检查参数数组长度
+      if ( v11 != 8 ) // 如果不是8个参数
+      {
+        // 返回错误信息
+        *(_OWORD *)((char *)&v381[1] + 10) = *(__int128 *)((char *)&xmmword_61EE9 + 10);
+        v381[1] = xmmword_61EE9;
+        v380 = xmmword_61EC9;
+        v381[0] = xmmword_61ED9;
+        v105 = (void *)sub_3C610(&v380);
+        if ( v105 )
+          sub_3C614(v105);
+
+        v15 = 0;
+        // ... 清理资源
+        goto LABEL_324;
+      }
+
+      v336 = v82;
+
+      // =================== 获取参数[7] - 可能是密钥或配置 ===================
+      v98 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 7);
+      v99 = v98 ? (char *)(*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1352LL))(a1, v98, 0) : 0LL;
+
+      // 将参数[7]转换为字符串并存入v380
+      sub_C030((int)&v380, v99);
+
+      // 清空v376
+      if ( (v376.tv_sec & 1) != 0 )
+      {
+        *v377 = 0;
+        v376.tv_usec = 0;
+        if ( (v376.tv_sec & 1) != 0 )
+        {
+          operator delete(v377);
+          v376.tv_sec = 0;
+        }
+      }
+      else
+      {
+        LOWORD(v376.tv_sec) = 0;
+      }
+
+      // 复制v380到v376
+      v376 = (struct timeval)v380;
+      v377 = *(_BYTE **)&v381[0];
+
+      // 获取v376的长度
+      if ( (v380 & 1) != 0 )
+        tv_usec = v376.tv_usec;
+      else
+        tv_usec = (unsigned __int64)(unsigned __int8)v380 >> 1;
+
+      v106 = v9;
+      v340 = tv_usec ? 0 : 1; // 如果参数[7]为空,v340=1
+
+      v107 = v98;
+      v108 = v98;
+
+      if ( !v99 ) // 参数[7]为空
+      {
+        // 释放资源
+        if ( v108 )
+          (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v107);
+
+        v9 = v106;
+      }
+      else // 参数[7]存在
+      {
+        // 释放参数[7]的字符串引用
+        (*(void (__fastcall **)(__int64, __int64, char *))(*(_QWORD *)a1 + 1360LL))(a1, v98, v99);
+        v9 = v106;
+      }
+
+      v39 = v350;
+
+      if ( v340 ) // 参数[7]为空
+      {
+        v82 = v336;
+        v103 = v345;
+        // 返回错误码
+        v15 = 0;
+        goto LABEL_324;
+      }
+
+      v82 = v336;
+    }
+
+    // =================== 处理参数[7] (密钥验证) ===================
+    // 如果 v346 == 1 且 v376 (参数[7]) 不为空
+    v109 = v346;
+    v351 = v39;
+    v337 = v82;
+
+    if ( v346 == 1 && v376字符串不为空 )
+    {
+      // 验证参数[7]是否等于特定值 (可能是固定密钥或密码)
+      // 构造字符串 "nebula_mini_app_key"
+      *(_QWORD *)((char *)v381 + 14) = 0x5ECEADE6CCC9EC5ALL;
+      v380 = xmmword_61F03;
+      v381[0] = unk_61F13;
+      v111 = (char *)sub_3C610(&v380); // "nebula_mini_app_key"
+
+      // 构造另一个字符串
+      *(_DWORD *)((char *)&v378.tv_sec + 7) = 84387923;
+      v378.tv_sec = 0x538B13476A5F0009LL;
+      v112 = (void *)sub_3C610(&v378);
+
+      // 比较 v376 是否等于 "nebula_mini_app_key"
+      v113 = strlen(v111);
+      v114 = (v376.tv_sec & 1) != 0 ? v376.tv_usec : (unsigned __int64)LOBYTE(v376.tv_sec) >> 1;
+
+      if ( v113 == v114 )
+      {
+        v113 = sub_DD6C((int)&v376, 0, -1, v111); // 字符串比较
+        v115 = v113 == 0; // 相等则v115=1
+      }
+      else
+      {
+        v115 = 0;
+      }
+
+      if ( v115 ) // 密钥正确
+        v119 = v112; // 使用v112
+      else
+        v119 = &unk_59396; // 使用空字符串
+
+      // 调用 sub_2B3AC 处理密钥
+      v121 = (v376.tv_sec & 1) != 0 ? v377 : (char *)&v376.tv_sec + 1;
+      v124 = sub_2B3AC(v122, v123, v119);
+
+      if ( !v124 ) // 处理失败
+      {
+        // 返回错误 70049
+        sub_3B350(k, 0x111C1u, (const char *)&unk_59396);
+        v124 = 0;
+        v125 = 1;
+      }
+
+      v334 = v124;
+
+      // 清理临时字符串
+      if ( v112 )
+        sub_3C614(v112);
+      if ( v111 )
+        sub_3C614(v111);
+
+      if ( v125 ) // 密钥验证失败
+      {
+        v39 = v351;
+        v15 = 0;
+        goto LABEL_509;
+      }
+
+      v39 = v351;
+    }
+    else
+    {
+      v334 = 0;
+    }
+
+    // =================== 获取参数[5] ===================
+    v341 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 5);
+    v127 = sub_38474(a1, v341); // 转换为字符
+
+    // =================== 构造加密请求结构体 ===================
+    // 结构体布局:
+    // +0: 未知标志
+    // +1: v127 (参数[5]的值,可能是加密类型标志)
+    // +2: v109 (v346的值,参数[6])
+    // +3: padding
+    // +4: v342 (参数[2]处理后的值,可能是加密模式)
+    // +8-24: v381[] 初始化为0
+    // +24-40: v381[2] 和 v382 初始化为0
+
+    BYTE2(v380) = v109 != 0;
+    BYTE1(v380) = v127 != 0;
+    memset(v381, 0, 24);
+    v381[2] = 0u;
+    v382 = 0;
+    *(_QWORD *)((char *)&v380 + 4) = v342;
+    sub_C1A0((int)v381); // 初始化某个结构
+
+    // 如果 v109 == 1 且 v334 != 0,添加额外数据
+    if ( v109 == 1 && v334 )
+    {
+      DWORD2(v381[1]) = *(_DWORD *)(v334 + 48); // 从v334偏移48处读取4字节
+      sub_C1A0((int)&v381[2]);
+    }
+
+    // =================== 创建加密对象 ===================
+    // 调用 operator new 分配24字节
+    v129 = operator new(0x18u);
+    // 调用 sub_12FF4 初始化对象,传入 v362 和 v380
+    sub_12FF4(v129, &v362, &v380);
+    v335 = v129; // 保存加密对象指针
+
+    // =================== *** 10400/10406/10414 命令分支 *** ===================
+    // 判断命令码
+    // 10400 (0x28A0): bit 6 和 bit 0 设置 -> 0x4041 & (1 << (0x28A0+96)) != 0 ?
+    // 重新计算: v348 - 10400 <= 14 (0xE) 并且特定位设置
+    // 0x4041 = 0100 0000 0100 0001
+    // 当 v348-10400 = 0, 6, 14 时满足
+    // 即 v348 = 10400, 10406, 10414
+
+    if ( v348 - 10400 > 0xE || ((1 << (v348 + 96)) & 0x4041) == 0 )
+    {
+      // =================== 非 10400/10406/10414 分支 ===================
+      // 这个分支处理 10405, 10411, 10413 等其他命令
+      v131 = v39;
+
+      // 重新获取参数[0]
+      v147 = (*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1384LL))(a1, a4, 0);
+      if ( v131 == v147 )
+        v39 = v131;
+      else
+      {
+        v39 = v147;
+        if ( v131 )
+          (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v131);
+      }
+
+      // 获取参数[0]的长度
+      v148 = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 1368LL))(a1, v39);
+      v149 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)a1 + 1824LL))(a1);
+
+      if ( !v148 || v149 == 1 ) // 参数[0]无效或在主线程
+      {
+        // 返回错误 70023
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
+        sub_3B350(a1, 0x11187u, (const char *)&unk_59396);
+        v15 = 0;
+        // ... 清理
+        goto LABEL_874;
+      }
+
+      // =================== 遍历参数[0]数组 ===================
+      v164 = 0;
+      v352 = v39;
+
+      while ( (int)v164 < v148 ) // 遍历每个元素
+      {
+        // 获取参数[0][v164]
+        jj = (*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1384LL))(a1, v39, v164);
+        v168 = jj;
+
+        if ( jj )
+        {
+          // 将元素转换为字符串
+          v173 = (char *)(*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1352LL))(a1, v168, 0);
+          sub_C030((int)&v378, v173);
+
+          // 添加到 v368 向量
+          v174 = v368;
+          if ( (unsigned __int64)v368 >= v369 )
+          {
+            sub_1A6B8(&v367, &v378); // 扩展向量
+          }
+          else
+          {
+            v175 = v378;
+            v368[1].tv_sec = (__time_t)v379;
+            *v174 = v175;
+            v378 = (struct timeval)0LL;
+            v379 = 0;
+            v368 = (struct timeval *)((char *)v368 + 24);
+          }
+
+          if ( v173 )
+            (*(void (__fastcall **)(__int64, __int64, char *))(*(_QWORD *)a1 + 1360LL))(a1, v168, v173);
+        }
+
+        // 释放jj
+        if ( v177 )
+          (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 184LL))(a1);
+
+        ++v164;
+      }
+
+      v178 = v9;
+
+      // =================== 调用 sub_40374 和 sub_A720 生成签名 ===================
+      v179 = sub_40374(); // 获取某个全局对象
+      v180 = v368; // 参数列表
+      v181 = v179;
+      v182 = v367 + 24;
+
+      // 准备各种参数
+      sub_D6F8(v360); // 初始化v360
+      sub_45208(v375, v182, v180, v360); // 处理参数列表
+
+      // 获取各个字符串参数
+      if ( (v375[0] & 1) != 0 )
+        v183 = *(char **)&v375[1];
+      else
+        v183 = (char *)v375 + 1;
+
+      if ( (v364 & 1) != 0 )
+        v184 = v366;
+      else
+        v184 = v365;
+
+      if ( (v376.tv_sec & 1) != 0 )
+        v185 = v377;
+      else
+        v185 = (char *)&v376.tv_sec + 1;
+
+      // *** 核心签名生成函数 sub_A720 ***
+      // 参数:
+      //   v181: 全局对象
+      //   v10: 随机数
+      //   v348: 命令码
+      //   v183: 参数列表字符串
+      //   v184: 输入数据 (v364)
+      //   v342: 加密模式
+      //   0: 未知
+      //   v346: 参数[6]
+      //   v185: 密钥字符串 (v376)
+      v186 = sub_A720(&v378, v181, v10, v348, v183, v184, v342, 0, v346, v185);
+
+      // 清理临时变量
+      if ( (v375[0] & 1) != 0 )
+        operator delete(*(void **)&v375[1]);
+      if ( (v360[0] & 1) != 0 )
+        operator delete(v361);
+
+      // =================== 命令码分支处理 ===================
+      if ( v348 == 10411 )
+      {
+        // 命令码 10411: 创建字符串对象
+        v198 = (v378.tv_sec & 1) != 0 ? v379 : (char *)&v378.tv_sec + 1;
+        v199 = (*(__int64 (__fastcall **)(__int64, _BYTE *))(*(_QWORD *)a1 + 1336LL))(a1, v198);
+        v15 = v199;
+        goto LABEL_864;
+      }
+
+      if ( v348 != 10405 )
+      {
+        // *** 命令码 10400 分支 ***
+        v15 = 0;
+        switch ( v348 )
+        {
+          case 0x28AD: // 10413
+            // 创建字符串对象
+            v201 = (v378.tv_sec & 1) != 0 ? v379 : (char *)&v378.tv_sec + 1;
+            v202 = (*(__int64 (__fastcall **)(__int64, _BYTE *))(*(_QWORD *)a1 + 1336LL))(a1, v201);
+            v15 = v202;
+            goto LABEL_864;
+
+          case 0x28B1: // 10417
+            // Base64编码处理
+            *((_QWORD *)&v375[0] + 1) = 0;
+            *(_QWORD *)&v375[1] = 0;
+            v206 = (v378.tv_sec & 1) != 0 ? v379 : (char *)&v378.tv_sec + 1;
+            v207 = (v378.tv_sec & 1) != 0 ? LODWORD(v378.tv_usec) : (unsigned __int64)LOBYTE(v378.tv_sec) >> 1;
+            *(_QWORD *)&v375[0] = 0;
+
+            // 调用 sub_3CC28 进行Base64编码
+            sub_3CC28(&tv, v206, v207);
+
+            // 复制结果
+            v375[0] = tv;
+            *(_QWORD *)&v375[1] = v357;
+
+            // 创建字符串对象
+            if ( (tv.tv_sec & 1) != 0 )
+              v208 = (char *)v357;
+            else
+              v208 = (char *)v375 + 1;
+            v15 = (*(__int64 (__fastcall **)(__int64, char *))(*(_QWORD *)a1 + 1336LL))(a1, v208);
+
+            // 清理
+            if ( (v375[0] & 1) != 0 )
+              operator delete(*(void **)&v375[1]);
+
+            goto LABEL_864;
+
+          case 0x28B2: // 10418 - *** 这是10400最终走到的分支 ***
+            // =================== 10418 加密主流程 ===================
+
+            // 获取v378长度
+            if ( (v378.tv_sec & 1) != 0 )
+              v209 = v378.tv_usec;
+            else
+              v209 = (unsigned __int64)LOBYTE(v378.tv_sec) >> 1;
+
+            if ( !v209 ) // v378为空
+            {
+              // 返回错误 10001969
+              sub_3B350(a1, 0x989B31u, (const char *)&unk_59396);
+            }
+
+            // 初始化加密包头
+            memset((char *)v375 + 4, 0, 20);
+            LODWORD(v375[0]) = 20801; // 魔数 0x5141 = "QA"
+
+            // 根据 v346 设置加密类型
+            if ( v346 )
+              v277 = 2; // v346!=0: 类型2
+            else
+            {
+              // v346==0: 从配置中读取类型
+              v278 = sub_2B1C4(v186);
+              v277 = *(unsigned __int8 *)(*(_QWORD *)(v278 + 24) + 8LL);
+            }
+
+            // 构造加密包头 (24字节)
+            // 偏移0-3: 魔数 20801 (0x5141)
+            // 偏移4-7: 类型和标志
+            WORD1(v375[0]) = WORD1(v375[0]) & 0xF000 | v277;
+
+            // 获取v378字符串
+            if ( (v378.tv_sec & 1) != 0 )
+              v286 = v379;
+            else
+              v286 = (char *)&v378.tv_sec + 1;
+            if ( (v378.tv_sec & 1) != 0 )
+              v287 = v378.tv_usec;
+            else
+              v287 = (unsigned __int64)LOBYTE(v378.tv_sec) >> 1;
+
+            // 偏移8-11: 应用ID
+            DWORD1(v375[0]) = *(_DWORD *)(qword_70998 + 148);
+
+            // 偏移12-15: v378字符串的哈希值
+            HIDWORD(v375[0]) = sub_120D8(v286, v287, &unk_56188);
+
+            // 偏移16-19: 当前时间戳 (秒)
+            gettimeofday(&tv, 0);
+            LODWORD(v375[1]) = (int)(tv.tv_usec / 1000 + 1000 * LODWORD(tv.tv_sec)) / 1000;
+
+            // 偏移20-23: 序列号 (原子递增)
+            do
+              v288 = __ldaxr((unsigned int *)&dword_70924);
+            while ( __stlxr(v288 + 1, (unsigned int *)&dword_70924) );
+            DWORD2(v375[0]) = v288 + 1;
+
+            // 设置标志位
+            // 基础标志: 0xD00
+            v295 = 0;
+            v296 = 0;
+            v299 = 0xD00;
+
+            // 根据 qword_70910 的各个位设置标志
+            if ( (qword_70910 & 0x2000000000000000LL) != 0 )
+              v295 = 1;
+            v296 = v295 | ((unsigned __int64)qword_70910 >> 57) & 2;
+
+            if ( (qword_70910 & 0x1000000000000000LL) != 0 )
+              v296 |= 4u;
+
+            v299 = ((unsigned __int64)qword_70910 >> 53) & 0x10
+                 | ((unsigned __int64)qword_70910 >> 54) & 0x20
+                 | ((unsigned __int64)qword_70910 >> 44) & 0x40
+                 | v296
+                 | 0xD00;
+
+            DWORD1(v375[1]) = v299;
+
+            // 计算校验和
+            v297 = 0;
+            v298 = 0;
+            do
+            {
+              v300 = *((unsigned __int8 *)v375 + v297++);
+              v298 += v300;
+            }
+            while ( v297 != 23 );
+
+            if ( v298 > 0xFF )
+              v298 = -v298;
+
+            // 将校验和写入最后一个字节
+            DWORD1(v375[1]) = v299 & 0xFFFFFF | ((unsigned __int8)v298 << 24);
+
+            // 用校验和异或整个包头
+            v301 = 0;
+            do
+            {
+              *((_BYTE *)v375 + v301) ^= (unsigned __int8)v298 ^ (unsigned __int8)v301;
+              ++v301;
+            }
+            while ( v301 != 23 );
+
+            // Base64编码包头
+            sub_3CC28(&tv, v375, 24);
+
+            // 复制到v378
+            if ( (v378.tv_sec & 1) != 0 )
+            {
+              *v379 = 0;
+              v378.tv_usec = 0;
+              if ( (v378.tv_sec & 1) != 0 )
+              {
+                operator delete(v379);
+                v378.tv_sec = 0;
+              }
+            }
+            else
+            {
+              LOWORD(v378.tv_sec) = 0;
+            }
+            v379 = v357;
+            v378 = tv;
+
+            gettimeofday(&tv, 0);
+            tv_sec = v378.tv_sec;
+
+            // 获取v378长度
+            v303 = (v378.tv_sec & 1) != 0 ? v378.tv_usec : (unsigned __int64)LOBYTE(v378.tv_sec) >> 1;
+
+            // 分配内存
+            v304 = malloc(v303);
+            v305 = v304;
+
+            if ( v304 )
+            {
+              // 复制v378到v305
+              if ( (tv_sec & 1) != 0 )
+              {
+                v313 = v378.tv_usec;
+                memset(v305, 0, v378.tv_usec);
+                v314 = v379;
+                v312 = tv_sec >> 1;
+                v315 = v313;
+              }
+              else
+              {
+                v312 = tv_sec >> 1;
+                memset(v305, 0, tv_sec >> 1);
+                LODWORD(v313) = v378.tv_usec;
+                v314 = (char *)&v378.tv_sec + 1;
+                v315 = tv_sec >> 1;
+              }
+              memcpy(v305, v314, v315);
+              v316 = (tv_sec & 1) != 0 ? (unsigned int)v313 : (unsigned int)v312;
+
+              // *** 核心加密函数 sub_11BF0 ***
+              // 参数:
+              //   v335: 加密对象
+              //   v305: 输入数据 (包头)
+              //   v316: 输入长度
+              //   n: 输出长度
+              //   &tv: 加密参数 (xmmword_61DA0 和 v346)
+              tv = (struct timeval)xmmword_61DA0;
+              LODWORD(v357) = v346 != 0;
+              v317 = (void *)sub_11BF0(v335, v305, v316, n, &tv);
+
+              // 释放临时缓冲区
+              free(v305);
+
+              if ( v317 ) // 加密成功
+              {
+                v320 = LODWORD(n[0]);
+
+                // 检查输出长度
+                // v346==0: 期望48字节
+                // v346!=0: 期望64字节
+                if ( v346 == 0 && LODWORD(n[0]) != 48 || v346 != 0 && LODWORD(n[0]) != 64 )
+                {
+                  // 长度不匹配,返回错误 10001971
+                  free(v317);
+                  sub_3B350(a1, 0x989B33u, (const char *)&unk_59396);
+                  v325 = (*(__int64 (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
+                  v15 = v325;
+                }
+                else
+                {
+                  // 长度正确,将v317复制到v378
+                  sub_D7A0((int)&v378, v317, v320);
+                  free(v317);
+
+                  // 创建返回字符串对象
+                  v322 = (v378.tv_sec & 1) != 0 ? v379 : (char *)&v378.tv_sec + 1;
+                  v323 = (*(__int64 (__fastcall **)(__int64, _BYTE *))(*(_QWORD *)a1 + 1336LL))(a1, v322);
+                  v15 = v323;
+                }
+              }
+              else // 加密失败
+              {
+                // 返回错误 10001972
+                sub_3B350(a1, 0x989B34u, (const char *)&unk_59396);
+                v326 = (*(__int64 (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
+                v15 = v326;
+              }
+            }
+            else // malloc失败
+            {
+              // 返回错误 10001970
+              sub_3B350(a1, 0x989B32u, (const char *)&unk_59396);
+              v324 = (*(__int64 (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
+              v15 = v324;
+            }
+
+            goto LABEL_864;
+
+          case 0x28B3: // 10419
+            // 获取参数[8]
+            v214 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 8);
+            v215 = v214 ? (char *)(*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1352LL))(a1, v214, 0) : 0LL;
+
+            // 转换为字符串
+            sub_C030((int)v375, v215);
+
+            // 生成某种结构
+            sub_455F0(v370);
+            v371 = 0;
+
+            // 获取时间戳
+            gettimeofday(&tv, 0);
+            v372 = (int)(tv.tv_usec / 1000 + 1000 * LODWORD(tv.tv_sec)) / 1000;
+
+            // 计算哈希
+            if ( (v375[0] & 1) != 0 )
+              v216 = *(_OWORD **)&v375[1];
+            else
+              v216 = (_OWORD *)((char *)v375 + 1);
+            if ( (v375[0] & 1) != 0 )
+              v217 = *((_QWORD *)&v375[0] + 1);
+            else
+              v217 = (unsigned __int64)LOBYTE(v375[0]) >> 1;
+            v373 = sub_120D8(v216, v217, &unk_56188);
+
+            // 计算校验和并异或
+            v221 = 0;
+            v222 = 0;
+            do
+            {
+              v224 = (unsigned __int8)v370[v222++];
+              v221 += v224;
+            }
+            while ( v222 != 20 );
+
+            if ( v221 > 0xFF )
+              v221 = -v221;
+
+            v374 = v221;
+
+            // 异或操作
+            v225 = 0;
+            v226 = qword_70998 + 148;
+            do
+            {
+              v227 = v225 & 3;
+              v228 = *(unsigned __int8 *)(v226 + v227);
+              v370[v225] ^= v228;
+              ++v225;
+            }
+            while ( v225 != 20 );
+
+            // Base64编码
+            sub_3CC28(n, v370, 20);
+
+            // 复制到tv
+            tv = *(struct timeval *)n;
+            v357 = v355;
+
+            // 创建返回字符串对象
+            if ( (n[0] & 1) != 0 )
+              v233 = v355;
+            else
+              v233 = (char *)&tv.tv_sec + 1;
+            v15 = (*(__int64 (__fastcall **)(__int64, char *))(*(_QWORD *)a1 + 1336LL))(a1, v233);
+
+            // 清理
+            if ( (tv.tv_sec & 1) != 0 )
+              operator delete(v357);
+            if ( (v375[0] & 1) != 0 )
+              operator delete(*(void **)&v375[1]);
+            if ( v215 )
+              (*(void (__fastcall **)(__int64, __int64, char *))(*(_QWORD *)a1 + 1360LL))(a1, v214, v215);
+            if ( v231 )
+              (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v230);
+
+            goto LABEL_864;
+
+          default:
+            goto LABEL_864;
+        }
+        goto LABEL_864;
+      }
+
+      // =================== 命令码 10405 (解密?) ===================
+      gettimeofday(&tv, 0);
+
+      // 获取v378长度
+      v257 = LOBYTE(v378.tv_sec);
+      if ( (v378.tv_sec & 1) != 0 )
+      {
+        v260 = v378.tv_usec;
+        v259 = malloc(v378.tv_usec);
+        memset(v259, 0, v260);
+        v261 = v379;
+        v258 = v257 >> 1;
+        v262 = v260;
+      }
+      else
+      {
+        LODWORD(v258) = LOBYTE(v378.tv_sec) >> 1;
+        v259 = malloc((unsigned int)v258);
+        memset(v259, 0, (unsigned int)v257 >> 1);
+        LODWORD(v260) = v378.tv_usec;
+        v261 = (char *)&v378.tv_sec + 1;
+        v262 = (unsigned int)v257 >> 1;
+      }
+      memcpy(v259, v261, v262);
+      v263 = (v257 & 1) != 0 ? (unsigned int)v260 : (unsigned int)v258;
+
+      // 调用 sub_11BF0 解密
+      v375[0] = xmmword_61DB0;
+      LODWORD(v375[1]) = v346 != 0;
+      v264 = sub_11BF0(v335, v259, v263, n, v375);
+      v265 = (void *)v264;
+
+      if ( v264 ) // 解密成功
+      {
+        free(v259);
+
+        v274 = LODWORD(n[0]);
+
+        // 检查输出长度
+        if ( !v346 && LODWORD(n[0]) != 42 )
+          goto LABEL_815;
+
+        if ( v346 && LODWORD(n[0]) != 58 )
+        {
+LABEL_815:
+          // 长度不匹配,返回空字符串
+          free(v265);
+          v280 = (*(__int64 (__fastcall **)(__int64, void *))(*(_QWORD *)a1 + 1336LL))(a1, &unk_59396);
+          v15 = v280;
+          goto LABEL_863;
+        }
+
+        // 长度正确,将v265复制到v378
+        sub_D7A0((int)&v378, v265, v274);
+
+        free(v265);
+      }
+
+      // 获取时间
+      gettimeofday(&tv, 0);
+      gettimeofday(&tv, 0);
+
+      if ( !v346 )
+      {
+        // 调用 sub_45324
+        sub_D6F8(v358);
+        sub_45324(a1, v358, 10405);
+        if ( (v358[0] & 1) != 0 )
+          operator delete(v359);
+      }
+
+      // 创建返回字符串对象
+      v281 = (v378.tv_sec & 1) != 0 ? v379 : (char *)&v378.tv_sec + 1;
+      v282 = (*(__int64 (__fastcall **)(__int64, _BYTE *))(*(_QWORD *)a1 + 1336LL))(a1, v281);
+      v15 = v282;
+
+LABEL_863:
+      while ( v187 >= 0 && v188 < 0 )
+        ;
+
+LABEL_864:
+      v9 = v178;
+
+      // 清理v378
+      if ( (v378.tv_sec & 1) != 0 )
+        operator delete(v379);
+
+      v39 = v352;
+      goto LABEL_873;
+    }
+
+    // =================== 10400/10406/10414 分支 ===================
+    // 获取参数[0]
+    v135 = (*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a1 + 1384LL))(a1, a4, 0);
+    v136 = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 1368LL))(a1, v135);
+
+    // 分配 v136+1 字节缓冲区
+    v137 = (int)v136 + 1LL;
+    v347 = v136;
+    v138 = calloc(v137, 1u);
+    memset(v138, 0, v137);
+    v338 = v135;
+
+    // 将参数[0]的内容复制到v138
+    (*(void (__fastcall **)(__int64, __int64, _QWORD, _QWORD, void *))(*(_QWORD *)a1 + 1600LL))(
+      a1,
+      v135,
+      0,
+      v347,
+      v138);
+
+    // 创建结构体 (32字节)
+    v139 = operator new(0x20u);
+    v142 = (_QWORD *)v139;
+    ptr = v138;
+
+    // 结构体布局:
+    // +0: v138指针 (参数[0]的数据)
+    // +8: v347 (参数[0]的长度)
+    // +12: v342 (参数[2]处理后的值)
+    // +16: 字符串指针 (默认为0)
+    // +24: 字符串长度 (默认为0)
+    *(_QWORD *)v139 = v138;
+    *(_DWORD *)(v139 + 8) = v347;
+
+    if ( v348 == 10414 )
+    {
+      // 命令码 10414
+      if ( !v342 )
+      {
+        // v342 == 0: 获取参数[7]
+        v235 = (*(__int64 (__fastcall **)(__int64, __int64, __int64))(*(_QWORD *)a1 + 1384LL))(a1, a4, 7);
+        v236 = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 1368LL))(a1, v235);
+
+        // 分配缓冲区
+        v145 = calloc((int)v236 + 1LL, 1u);
+        memset(v145, 0, (int)v236 + 1LL);
+
+        // 复制参数[7]到v145
+        (*(void (__fastcall **)(__int64, __int64, _QWORD, _QWORD, void *))(*(_QWORD *)a1 + 1600LL))(
+          a1,
+          v235,
+          0,
+          v236,
+          v145);
+
+        // 设置结构体的字符串字段
+        v142[2] = v145;
+        *((_DWORD *)v142 + 6) = v236;
+
+        if ( v235 )
+          (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v235);
+      }
+      else if ( v342 == 1 )
+      {
+        // v342 == 1: 使用固定字符串 "p10"
+        *(_QWORD *)(v139 + 16) = "p10";
+        *(_DWORD *)(v139 + 24) = 2;
+      }
+    }
+    else if ( v348 == 10406 )
+    {
+      // 命令码 10406: 使用固定字符串 "p6"
+      *(_QWORD *)(v139 + 16) = "p6";
+      *(_DWORD *)(v139 + 24) = 2;
+      v145 = 0;
+    }
+    else
+    {
+      v145 = 0;
+    }
+
+    // 设置结构体的v342字段
+    v152 = 0;
+    *((_DWORD *)v142 + 3) = v342;
+
+    // 判断命令码是否为 10406 或 10414
+    if ( (v348 | 8) == 0x28AE )
+    {
+      v153 = v335;
+
+      if ( v342 )
+        goto LABEL_532;
+
+      if ( v343 != 1 )
+      {
+        // v343 != 1: 调用 sub_12710 处理
+        v156 = sub_12710(v335, *v142, *((unsigned int *)v142 + 2));
+        v152 = (void *)v156;
+
+        if ( v156 )
+        {
+          // 更新结构体的数据
+          v159 = *(int **)(v156 + 23);
+          v162 = *(_QWORD *)(v159 + 1);
+          v163 = *v159;
+          *v142 = v162;
+          *((_DWORD *)v142 + 2) = v163;
+        }
+      }
+      else
+      {
+        // v343 == 1: 调用 sub_12710 处理
+        v156 = sub_12710(v335, *v142, *((unsigned int *)v142 + 2));
+        v152 = (void *)v156;
+      }
+
+LABEL_532:
+      if ( v141 < 0 )
+        goto LABEL_707;
+
+      if ( (v140 - 1) * v140 < 0 )
+        goto LABEL_709;
+
+LABEL_707:
+      // *** 调用 sub_C1E8 执行加密 ***
+      v378.tv_sec = 0;
+      v240 = sub_40374();
+      v241 = sub_C1E8(v240, &v378, v348, v142, v153);
+      v243 = (void *)v241;
+
+      // 如果 v152 != 0,调用 sub_12D78
+      if ( v152 )
+      {
+        sub_12D78(v153, v152);
+      }
+
+      // 释放 ptr
+      if ( ptr )
+      {
+        free(ptr);
+      }
+
+      // 释放 v145
+      if ( v145 )
+      {
+        free(v145);
+      }
+
+      v15 = 0;
+
+      // 如果 v243 != 0 且 v378.tv_sec != 0
+      if ( v243 && v378.tv_sec )
+      {
+        v247 = v378.tv_sec;
+
+        // 创建数组对象
+        v15 = (*(__int64 (__fastcall **)(__int64, _QWORD))(*(_QWORD *)a1 + 1408LL))(a1, v247);
+        v248 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)a1 + 1824LL))(a1);
+
+        if ( v248 == 1 ) // 在主线程
+        {
+          // 返回错误 70022
+          (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1);
+          sub_3B350(a1, 0x11186u, (const char *)&unk_59396);
+          v15 = 0;
+        }
+
+        if ( v15 )
+        {
+          // 将 v243 的内容设置到数组
+          for ( mm = v378.tv_sec; ; )
+          {
+            (*(void (__fastcall **)(__int64, __int64, _QWORD, _QWORD, void *))(*(_QWORD *)a1 + 1664LL))(
+              a1,
+              v15,
+              0,
+              mm,
+              v243);
+
+            if ( dword_70C10 < 10 || (v250 & 1) == 0 )
+              break;
+          }
+        }
+
+        // 释放 v243
+        free(v243);
+
+        // 释放 v335
+        if ( dword_70C10 >= 10 && (v252 & 1) != 0 )
+        {
+          (*(void (__fastcall **)(__int64))(*(_QWORD *)v335 + 8LL))(v335);
+          v335 = 0;
+        }
+
+        v253 = v335;
+        do
+        {
+          if ( v253 )
+            (*(void (__fastcall **)(__int64))(*(_QWORD *)v253 + 8LL))(v253);
+          v253 = 0;
+        }
+        while ( (dword_70C10 & 0x80000000) == 0 && kk < 0 );
+
+        v243 = 0;
+        v335 = 0;
+      }
+
+      // 释放 v243
+      if ( v243 )
+      {
+        free(v243);
+      }
+
+      // 释放结构体
+      if ( i1 )
+        operator delete(v246);
+      if ( v255 )
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v255);
+
+      v39 = v351;
+      goto LABEL_874;
+    }
+
+    // 命令码 10400: 不进入 (v348 | 8) == 0x28AE 分支
+    // ... (这部分代码不会执行)
+
+LABEL_873:
+    while ( v154 >= 0 && m < 0 )
+      ;
+
+LABEL_874:
+    if ( v154 < 10 || (m & 1) == 0 )
+    {
+      ii = v341;
+      v285 = v335;
+      goto LABEL_980;
+    }
+
+    if ( v335 )
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)v335 + 8LL))(v335);
+
+    for ( ii = v341; ; ii = 0 )
+    {
+      if ( (v381[2] & 1) != 0 )
+        operator delete(v382);
+      if ( (v381[0] & 1) != 0 )
+        operator delete(*(void **)&v381[1]);
+      if ( ii )
+      {
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, ii);
+        ii = 0;
+      }
+      v285 = 0;
+
+LABEL_980:
+      if ( v285 )
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)v285 + 8LL))(v285);
+      if ( (v381[2] & 1) != 0 )
+        operator delete(v382);
+      if ( (v381[0] & 1) != 0 )
+        operator delete(*(void **)&v381[1]);
+      if ( ii )
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, ii);
+
+      if ( dword_70C10 < 10 || (v86 & 1) == 0 )
+        break;
+    }
+
+LABEL_509:
+    v82 = v337;
+    v103 = v345;
+
+    while ( v85 >= 0 && v86 < 0 )
+      ;
+
+    if ( v85 < 0 )
+      goto LABEL_513;
+
+    goto LABEL_512;
+
+LABEL_183:
+    if ( v45 )
+      (*(void (__fastcall **)(__int64, __int64, char *))(*(_QWORD *)a1 + 1360LL))(a1, v349, v45);
+
+    v64 = dword_70C10;
+    v65 = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
+
+    if ( v344 )
+    {
+      v39 = v349;
+      v15 = 0;
+
+LABEL_208:
+      // 清理 v364
+      if ( (v364 & 1) != 0 )
+        operator delete(v366);
+
+      v37 = dword_70C10;
+      v38 = (((unsigned __int8)*((_DWORD *)v9 + 773) - 1) * (unsigned __int8)*((_DWORD *)v9 + 773)) & 1;
+
+LABEL_217:
+      // 释放 v39
+      if ( v39 )
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v39);
+
+      v28 = dword_70C10;
+      j = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
+
+      do
+      {
+        if ( v39 )
+          (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v39);
+
+        v28 = dword_70C10;
+        j = (*((_DWORD *)v9 + 773) - 1) * *((_DWORD *)v9 + 773);
+
+        if ( dword_70C10 < 10 )
+          break;
+
+        v39 = 0;
+      }
+      while ( (j & 1) != 0 );
+
+      goto LABEL_225;
+    }
+
+    // ... (其他清理代码)
+
+LABEL_225:
+    v12 = v9;
+
+    if ( v28 < 10 )
+    {
+      v78 = v353;
+      v77 = v353;
+      v80 = v353;
+      if ( !v21 )
+        goto LABEL_235;
+      goto LABEL_234;
+    }
+
+    v76 = v353;
+    v77 = v353;
+    v78 = v353;
+    v79 = v353;
+    v80 = v353;
+
+    if ( (j & 1) == 0 )
+      goto LABEL_233;
+
+    if ( v21 )
+    {
+LABEL_228:
+      (*(void (__fastcall **)(__int64, __int64, char *))(*(_QWORD *)a1 + 1360LL))(a1, v80, v21);
+      goto LABEL_229;
+    }
+
+    while ( 1 )
+    {
+LABEL_229:
+      if ( v76 )
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v79);
+
+      if ( v19 )
+      {
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v19);
+        v77 = 0;
+        v78 = 0;
+        v19 = 0;
+        if ( v21 )
+          goto LABEL_234;
+      }
+      else
+      {
+        v77 = 0;
+        v78 = 0;
+
+LABEL_233:
+        if ( v21 )
+LABEL_234:
+          (*(void (__fastcall **)(__int64, __int64, char *))(*(_QWORD *)a1 + 1360LL))(a1, v80, v21);
+      }
+
+LABEL_235:
+      if ( v78 )
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v77);
+      if ( v19 )
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)a1 + 184LL))(a1, v19);
+
+      if ( dword_70C10 < 0 || (((*((_DWORD *)v12 + 773) - 1) * *((_DWORD *)v12 + 773)) & 0x80000000) == 0 )
+        goto LABEL_45;
+
+      v79 = 0;
+      v76 = 0;
+      v19 = 0;
+
+      if ( v21 )
+        goto LABEL_228;
+    }
+  }
+
+  v12 = &byte_70000;
+
+  while ( 1 )
+  {
+    nullsub_5(111);
+    WORD2(v380) = -656;
+    LODWORD(v380) = 839400965;
+    v14 = (char *)sub_3C54C(&v380);
+    sub_3B350(a1, 0x11171u, v14); // 返回错误 "70001"
+    if ( v14 )
+      sub_3C614(v14);
+    v15 = 0;
+
+    if ( dword_70C10 < 0 || (((dword_70C14 - 1) * dword_70C14) & 0x80000000) == 0 )
+      break;
+
+    // 混淆代码
+    nullsub_5(111);
+    WORD2(v380) = -656;
+    LODWORD(v380) = 839400965;
+    v13 = (char *)sub_3C54C(&v380);
+    sub_3B350(a1, 0x11171u, v13);
+    if ( v13 )
+      sub_3C614(v13);
+  }
+
+LABEL_45:
+  // 清理 v367
+  sub_DCE8(&v367);
+
+  while ( (dword_70C10 & 0x80000000) == 0 && (*((_DWORD *)v12 + 773) - 1) * *((_DWORD *)v12 + 773) < 0 )
+  {
+    sub_DCE8(&v367);
+    sub_DCE8(&v367);
+  }
+
+  return v15;
+}
+
+// =====================================================
+// *** 10400加密流程总结 ***
+// =====================================================
+//
+// 1. 参数验证:
+//    - 检查参数数组长度 >= 7
+//    - 调用 sub_3E5C0 验证参数[4]
+//    - 检查全局状态标志
+//    - 检查参数[0] (jobject)
+//    - 检查参数[1] (输入数据字符串)
+//
+// 2. 参数提取:
+//    - 参数[0]: jobject (未使用)
+//    - 参数[1]: 输入数据字符串 -> v364
+//    - 参数[2]: 加密模式标志 -> v342 (通过 sub_386DC 处理)
+//    - 参数[3]: 某个字符标志 -> v343
+//    - 参数[5]: 加密类型标志 -> v127
+//    - 参数[6]: 加密版本标志 -> v346 (0或1)
+//    - 参数[7]: 密钥字符串 -> v376 (仅当参数数组长度=8)
+//
+// 3. 配置提取:
+//    - 从 sub_2B1C4 获取配置对象
+//    - 从配置对象提取17字节配置数据 -> v362
+//
+// 4. 密钥验证 (如果 v346==1 且 参数[7] 不为空):
+//    - 检查参数[7]是否等于 "nebula_mini_app_key"
+//    - 如果不相等,使用空字符串
+//    - 调用 sub_2B3AC 处理密钥 -> v334
+//
+// 5. 创建加密请求结构体 v380:
+//    - BYTE1: v127 (参数[5])
+//    - BYTE2: v346 (参数[6])
+//    - DWORD+4: v342 (参数[2]处理后)
+//    - 其他字段: 初始化为0
+//    - 如果 v346==1 且 v334!=0: 添加 v334[48] 到 DWORD2(v381[1])
+//
+// 6. 创建加密对象:
+//    - 调用 operator new(0x18) 分配24字节
+//    - 调用 sub_12FF4(对象, &v362, &v380) 初始化 -> v335
+//
+// 7. 准备参数列表:
+//    - 收集所有参数到 v368 向量
+//    - 调用 sub_45208 格式化参数列表 -> v375
+//
+// 8. 生成签名:
+//    - 调用 sub_A720(输出, 全局对象, 随机数, 命令码, 参数列表, 输入数据, v342, 0, v346, 密钥) -> v186
+//    - 输出到 v378
+//
+// 9. 构造加密包头 (24字节):
+//    - 偏移0-3: 魔数 0x5141 ("QA")
+//    - 偏移4-7: 加密类型和标志
+//    - 偏移8-11: 应用ID (从 qword_70998+148)
+//    - 偏移12-15: v378字符串的哈希值 (sub_120D8)
+//    - 偏移16-19: 当前时间戳 (秒)
+//    - 偏移20-23: 序列号 (原子递增)
+//    - 根据 qword_70910 设置各种标志位
+//    - 计算校验和并写入最后一个字节
+//    - 用校验和异或整个包头
+//    - Base64编码包头 -> v378
+//
+// 10. 加密:
+//     - 分配内存并复制 v378
+//     - 调用 sub_11BF0(v335, 包头数据, 包头长度, 输出长度, 加密参数) -> v317
+//     - 加密参数: xmmword_61DA0 和 v346
+//     - 检查输出长度:
+//       - v346==0: 期望48字节
+//       - v346!=0: 期望64字节
+//
+// 11. 返回结果:
+//     - 如果加密成功且长度正确: 将 v317 复制到 v378,创建字符串对象并返回
+//     - 如果加密失败或长度错误: 返回错误码并创建空字符串对象
+//
+// =====================================================
