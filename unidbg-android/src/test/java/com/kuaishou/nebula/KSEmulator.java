@@ -927,12 +927,20 @@ public class KSEmulator extends AbstractJni {
         // - opcode 10408: 期望 ArrayObject(StringObject(Hex))
         // - encData.log 显示真实环境使用的是 Hex 字符串
 
-        DvmObject<?> requestParam;
-        // opcode 10400: 使用 ByteArray
-        ByteArray requestByteArray = new ByteArray(vm, requestBytes);
-        vm.addLocalObject(requestByteArray);
-        requestParam = requestByteArray;
-        System.out.println("[encryptEncData] ✅ 参数[0]: ByteArray (长度=" + requestBytes.length + ")");
+        // 🔧 修复：根据执行日志，native 代码期望参数[0] 是 ArrayObject[StringObject]
+        // 其中 StringObject 包含十六进制字符串（而不是 ByteArray）
+        // 参考 call_doCommandNative_sig3 方法中的参数构造
+
+        // 将字节数组转换为十六进制字符串
+        String requestHexString = ENC_DATA_REQUEST_HEX;
+        StringObject hexStringObj = new StringObject(vm, requestHexString);
+        vm.addLocalObject(hexStringObj);
+
+        // 将十六进制字符串包装成单元素的 ArrayObject
+        ArrayObject requestParam = new ArrayObject(hexStringObj);
+        vm.addLocalObject(requestParam);
+
+        System.out.println("[encryptEncData] ✅ 参数[0]: ArrayObject[StringObject] (Hex字符串长度=" + requestHexString.length() + ")");
 
         // 参数[1]: UUID字符串
         StringObject uuid1 = new StringObject(vm, "d7b7d042-d4f2-4012-be60-d97ff2429c17");
